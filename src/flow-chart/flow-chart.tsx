@@ -11,10 +11,13 @@ import {
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import SiderBar from './components/sider-bar';
+import type { FinishParams } from './components/sider-bar';
 import HeaderBar from './components/header-bar';
 import Footer from './components/footer';
+import No from '@assets/no.png';
+import Yes from '@assets/yes.png';
 
-export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip1' | 'tip2' | 'tip3';
+export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
 const mode = 'redaonly';
 
@@ -22,10 +25,10 @@ const nodeColor = {
   root: '#40a9ff',
   branch: '#95de64',
   node: '#d9f7be',
-  pureNode: 'red',
-  tip1: '#ffd6e7',
-  tip2: '#ffe58f',
-  tip3: '#f0f0f0'
+  pureNode: '#d9f7be',
+  tip: '#ffd6e7'
+  // tip2: '#ffe58f',
+  // tip3: '#f0f0f0'
 };
 
 function App() {
@@ -45,7 +48,8 @@ function App() {
     }
   ]);
 
-  const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } = useFlowViewer();
+  const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } =
+    useFlowViewer();
   const { undo, redo } = useFlowEditor();
 
   useEffect(() => {
@@ -54,7 +58,6 @@ function App() {
   }, [edges]);
 
   const onAddBranch = (type: TypeNode) => {
-    console.log(type);
     const reg = new RegExp(`^${selectedId}&`);
     const filter = nodes.filter(
       (node) =>
@@ -63,14 +66,15 @@ function App() {
         !Number.isNaN(Number(node.id.split(`${selectedId}&`)[1]))
     );
     const last = filter[filter.length - 1];
-    const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
+    const preNum =
+      last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
 
     setNodes([
       ...nodes,
       {
         id: `${selectedId}&${preNum + 1}`,
         data: {
-          title: `${selectedId}&${preNum + 1}`,
+          title: `${type}&${preNum + 1}`,
           metadata: {
             type
           }
@@ -96,16 +100,53 @@ function App() {
 
   const onSearch = (value: string) => {
     selectNodes(
-      nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
+      nodes
+        .filter((node) => node.data.title.includes(value))
+        .map((node) => node.id),
       SelectType.SELECT
     );
   };
 
   const onCopy = () => {
-    console.log('--------nodes:', nodes, '----------edges:', edges);
-    // console.log(nodes.filter((node) => node.data.metadata.type));
+    console.log(
+      nodes.find(
+        (node) =>
+          node.id === edges.find((edge) => edge.target === selectedId)?.source
+      )
+    );
+
+    // console.log('--------nodes:', nodes, '----------edges:', edges);
   };
 
+  const onFinish = ({ step, values }: FinishParams) => {
+    console.log(values);
+
+    if (step === 1) {
+      setNodes(
+        nodes.map((node) => {
+          return node.id === selectedId
+            ? { ...node, data: { ...node.data, title: values.title } }
+            : node;
+        })
+      );
+    }
+
+    if (step === 2) {
+      setNodes(
+        nodes.map((node) => {
+          return node.id === selectedId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  logo: values.belong === 1 ? Yes : No
+                }
+              }
+            : node;
+        })
+      );
+    }
+  };
   return (
     <div className='h-full'>
       <HeaderBar
@@ -133,23 +174,26 @@ function App() {
             />
           )}
         </div>
-        <div className='w-80 m-2'>
+        <div className='w-72 m-2'>
           <SiderBar
+            parentNode={nodes.find(
+              (node) =>
+                node.id ===
+                edges.find((edge) => edge.target === selectedId)?.source
+            )}
             selectedNode={nodes.find((node) => node.id === selectedId)}
-            onFinish={(title) =>
-              setNodes(
-                nodes.map((node) => {
-                  return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
-                })
-              )
-            }
+            onFinish={onFinish}
           />
         </div>
       </div>
       <Footer
         nodeNum={nodes.length}
-        ruleNum={nodes.filter((node) => node.data.metadata.type.includes('tip1')).length}
-        branchNum={nodes.filter((node) => node.data.metadata.type === 'branch').length}
+        ruleNum={
+          nodes.filter((node) => node.data.metadata.type === 'tip').length
+        }
+        branchNum={
+          nodes.filter((node) => node.data.metadata.type === 'branch').length
+        }
         version={'草药管理v1.1'}
         auditTime={'2023-07-01'}
       />

@@ -83,7 +83,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <button
           className='text-xs flex flex-col items-center'
           disabled={isTipDisaled()}
-          onClick={() => onAddBranch('tip1')}
+          onClick={() => onAddBranch('tip')}
         >
           <img width={24} height={24} src={Tip} className={clsx(isTipDisaled() && 'opacity-30')} />
           <span>警示</span>

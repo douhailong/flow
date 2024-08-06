@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { Button, Form, Input, message } from 'antd';
 import { FlowViewNode } from '@ant-design/pro-flow';
+import type { SiderBarProps } from './index';
 
-type Setup1Props = { selectedNode?: FlowViewNode; onFinish: (title: string) => void };
-
-const Setup1: React.FC<Setup1Props> = ({ selectedNode, onFinish }) => {
+const Step1: React.FC<SiderBarProps> = ({ selectedNode, onFinish }) => {
   const [form] = Form.useForm<{ title: string }>();
 
   useEffect(() => {
@@ -19,14 +18,16 @@ const Setup1: React.FC<Setup1Props> = ({ selectedNode, onFinish }) => {
         form={form}
         onFinish={(values) => {
           const trimTitle = values.title.trim();
-          trimTitle === '' ? message.error('请输入分支名称') : onFinish(trimTitle);
+          trimTitle === ''
+            ? message.error('请输入分支名称')
+            : onFinish({ step: 1, values: { title: trimTitle } });
         }}
       >
         <Form.Item name='title'>
-          <Input size='large' placeholder='请输入分支名称' />
+          <Input placeholder='请输入分支名称' />
         </Form.Item>
         <Form.Item>
-          <Button type='primary' size='large' block htmlType='submit'>
+          <Button type='primary' block htmlType='submit'>
             确认
           </Button>
         </Form.Item>
@@ -35,4 +36,4 @@ const Setup1: React.FC<Setup1Props> = ({ selectedNode, onFinish }) => {
   );
 };
 
-export default Setup1;
+export default Step1;

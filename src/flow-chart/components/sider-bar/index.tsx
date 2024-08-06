@@ -1,19 +1,27 @@
 import React from 'react';
-import Setup1 from './setup1';
 import { FlowViewNode } from '@ant-design/pro-flow';
-import Setup2 from './setup2';
+import Step1 from './step1';
+import Step2 from './step2';
+import Step3 from './step3';
 
-type SiderBarProps = {
+export type FinishParams = { step: 1 | 2 | 3; values: { title?: string } };
+export type SiderBarProps = {
   selectedNode?: FlowViewNode;
-  onFinish: (values: any) => void;
+  parentNode?: FlowViewNode;
+  onFinish: (params: FinishParams) => void;
 };
 
 const SiderBar: React.FC<SiderBarProps> = (props) => {
   return (
     <div className='h-full'>
-      {props.selectedNode?.data.metadata.type === 'branch' && <Setup1 {...props} />}
+      {props.selectedNode?.data.metadata.type === 'branch' && (
+        <Step1 {...props} />
+      )}
       {(props.selectedNode?.data.metadata.type === 'pureNode' ||
-        props.selectedNode?.data.metadata.type === 'node') && <Setup2 {...props} />}
+        props.selectedNode?.data.metadata.type === 'node') && (
+        <Step2 {...props} />
+      )}
+      {props.selectedNode?.data.metadata.type === 'tip' && <Step3 {...props} />}
     </div>
   );
 };

@@ -28,3 +28,11 @@ button[disabled] {
 /* .content .title span {
   color: initial !important;
 } */
+
+.ant-xx .img {
+  opacity: 0;
+}
+
+.ant-xx .img[src] {
+  opacity: 1;
+}
