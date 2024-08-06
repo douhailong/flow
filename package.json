@@ -17,6 +17,7 @@
     "@antv/x6-plugin-keyboard": "^2.2.3",
     "@antv/x6-plugin-selection": "^2.2.2",
     "antd": "^5.19.3",
+    "axios": "^1.7.3",
     "clsx": "^2.1.1",
     "insert-css": "^2.0.0",
     "react": "^18.2.0",

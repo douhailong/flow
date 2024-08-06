@@ -12,16 +12,14 @@ export type SiderBarProps = {
 };
 
 const SiderBar: React.FC<SiderBarProps> = (props) => {
+  const type = props.selectedNode?.data.metadata.type;
   return (
     <div className='h-full'>
-      {props.selectedNode?.data.metadata.type === 'branch' && (
-        <Step1 {...props} />
+      {(type === 'branch' || type === 'root') && (
+        <Step1 {...props} prefix={type === 'root' ? '规则' : '分支'} />
       )}
-      {(props.selectedNode?.data.metadata.type === 'pureNode' ||
-        props.selectedNode?.data.metadata.type === 'node') && (
-        <Step2 {...props} />
-      )}
-      {props.selectedNode?.data.metadata.type === 'tip' && <Step3 {...props} />}
+      {(type === 'pureNode' || type === 'node') && <Step2 {...props} />}
+      {type === 'tip' && <Step3 {...props} />}
     </div>
   );
 };

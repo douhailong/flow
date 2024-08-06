@@ -11,6 +11,21 @@ body,
   box-sizing: border-box;
 }
 
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+  margin-right: 4px;
+  background-color: transparent;
+}
+::-webkit-scrollbar-corner {
+  display: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(42, 46, 54, 0.15);
+  border-radius: 4px;
+}
+
 button {
   border: none;
   background-color: transparent;
@@ -35,4 +50,8 @@ button[disabled] {
 
 .ant-xx .img[src] {
   opacity: 1;
+}
+
+.ant-form-item {
+  margin-bottom: 8px;
 }

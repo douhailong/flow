@@ -25,5 +25,15 @@ export default defineConfig({
         replacement: resolve(__dirname, 'src/components')
       }
     ]
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://47.101.180.183:8016',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+    // open: true
   }
 });

@@ -17,6 +17,8 @@ import Footer from './components/footer';
 import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
 
+import { aaa } from '@services/index';
+
 export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
 const mode = 'redaonly';
@@ -27,26 +29,98 @@ const nodeColor = {
   node: '#d9f7be',
   pureNode: '#d9f7be',
   tip: '#ffd6e7'
-  // tip2: '#ffe58f',
-  // tip3: '#f0f0f0'
+};
+
+const levelColor = {
+  1: '#ffd6e7',
+  2: '#ffe58f',
+  3: '#f0f0f0'
 };
 
 function App() {
   const [selectedId, setSelectedId] = useState<string>('root');
   const [show, setShow] = useState(true);
-  const [edges, setEdges] = useState<FlowViewEdge[]>([]);
-  const [nodes, setNodes] = useState<FlowViewNode[]>([
+  const [edges, setEdges] = useState<FlowViewEdge[]>([
     {
-      id: 'root',
-      data: {
-        title: '草药管理',
-        metadata: {
-          type: 'root'
-        }
-      },
-      style: { background: '#40a9ff' }
+      target: 'root&2',
+      source: 'root',
+      id: 'root&2'
+    },
+    {
+      target: 'root&2&1',
+      source: 'root&2',
+      id: 'root&2&1'
+    },
+    {
+      target: 'root&2&1&1',
+      source: 'root&2&1',
+      id: 'root&2&1&1'
     }
   ]);
+  const [nodes, setNodes] = useState<FlowViewNode[]>(
+    //   [
+    //   {
+    //     id: 'root',
+    //     data: {
+    //       title: '草药管理',
+    //       metadata: {
+    //         type: 'root'
+    //       }
+    //     },
+    //     style: { background: '#40a9ff' }
+    //   }
+    // ][
+    [
+      {
+        id: 'root',
+        data: {
+          title: '草药管理',
+          metadata: {
+            type: 'root'
+          }
+        },
+        style: {
+          background: '#40a9ff'
+        }
+      },
+      {
+        id: 'root&2',
+        data: {
+          title: 'branch&2',
+          metadata: {
+            type: 'branch'
+          }
+        },
+        style: {
+          background: '#95de64'
+        }
+      },
+      {
+        id: 'root&2&1',
+        data: {
+          title: 'pureNode&1',
+          metadata: {
+            type: 'pureNode'
+          }
+        },
+        style: {
+          background: '#d9f7be'
+        }
+      },
+      {
+        id: 'root&2&1&1',
+        data: {
+          title: 'node&1',
+          metadata: {
+            type: 'node'
+          }
+        },
+        style: {
+          background: '#d9f7be'
+        }
+      }
+    ]
+  );
 
   const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } =
     useFlowViewer();
@@ -56,6 +130,10 @@ function App() {
     setShow(false);
     setTimeout(() => setShow(true), 0);
   }, [edges]);
+
+  useEffect(() => {
+    aaa();
+  }, []);
 
   const onAddBranch = (type: TypeNode) => {
     const reg = new RegExp(`^${selectedId}&`);
@@ -74,7 +152,7 @@ function App() {
       {
         id: `${selectedId}&${preNum + 1}`,
         data: {
-          title: `${type}&${preNum + 1}`,
+          title: `${type}&请设置节点内容`,
           metadata: {
             type
           }
@@ -108,14 +186,7 @@ function App() {
   };
 
   const onCopy = () => {
-    console.log(
-      nodes.find(
-        (node) =>
-          node.id === edges.find((edge) => edge.target === selectedId)?.source
-      )
-    );
-
-    // console.log('--------nodes:', nodes, '----------edges:', edges);
+    console.log('--------nodes:', nodes, '----------edges:', edges);
   };
 
   const onFinish = ({ step, values }: FinishParams) => {
@@ -174,7 +245,7 @@ function App() {
             />
           )}
         </div>
-        <div className='w-72 m-2'>
+        <div className='w-72 p-2 overflow-y-auto relative'>
           <SiderBar
             parentNode={nodes.find(
               (node) =>
