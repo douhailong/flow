@@ -17,8 +17,6 @@ import Footer from './components/footer';
 import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
 
-import { aaa } from '@services/index';
-
 export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
 const mode = 'redaonly';
@@ -122,18 +120,13 @@ function App() {
     ]
   );
 
-  const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } =
-    useFlowViewer();
+  const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } = useFlowViewer();
   const { undo, redo } = useFlowEditor();
 
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 0);
   }, [edges]);
-
-  useEffect(() => {
-    aaa();
-  }, []);
 
   const onAddBranch = (type: TypeNode) => {
     const reg = new RegExp(`^${selectedId}&`);
@@ -144,8 +137,7 @@ function App() {
         !Number.isNaN(Number(node.id.split(`${selectedId}&`)[1]))
     );
     const last = filter[filter.length - 1];
-    const preNum =
-      last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
+    const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
 
     setNodes([
       ...nodes,
@@ -178,9 +170,7 @@ function App() {
 
   const onSearch = (value: string) => {
     selectNodes(
-      nodes
-        .filter((node) => node.data.title.includes(value))
-        .map((node) => node.id),
+      nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
       SelectType.SELECT
     );
   };
@@ -210,7 +200,7 @@ function App() {
                 ...node,
                 data: {
                   ...node.data,
-                  logo: values.belong === 1 ? Yes : No
+                  logo: values.sourceResult === 'T' ? Yes : No
                 }
               }
             : node;
@@ -248,9 +238,7 @@ function App() {
         <div className='w-72 p-2 overflow-y-auto relative'>
           <SiderBar
             parentNode={nodes.find(
-              (node) =>
-                node.id ===
-                edges.find((edge) => edge.target === selectedId)?.source
+              (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
             )}
             selectedNode={nodes.find((node) => node.id === selectedId)}
             onFinish={onFinish}
@@ -259,12 +247,8 @@ function App() {
       </div>
       <Footer
         nodeNum={nodes.length}
-        ruleNum={
-          nodes.filter((node) => node.data.metadata.type === 'tip').length
-        }
-        branchNum={
-          nodes.filter((node) => node.data.metadata.type === 'branch').length
-        }
+        ruleNum={nodes.filter((node) => node.data.metadata.type === 'tip').length}
+        branchNum={nodes.filter((node) => node.data.metadata.type === 'branch').length}
         version={'草药管理v1.1'}
         auditTime={'2023-07-01'}
       />

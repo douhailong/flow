@@ -14,12 +14,15 @@ instance.interceptors.request.use(
       return config;
     }
 
+    const token = localStorage.getItem('token');
+
     return {
       ...config,
       headers: {
-        ...config?.headers,
+        ...config.headers,
         Authorization:
-          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzIzNTMzNjQzLCJpYXQiOjE3MjI5Mjg4NDMsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.LQpfppv7RWLEUONQYkmAJnOWER1W5w_GEnkvdHMTS3nnQhbsgxX0ilUD1LTO1ORj29__I08ge_szeS3qWbXROg'
+          token ||
+          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzIzNjE4OTQxLCJpYXQiOjE3MjMwMTQxNDEsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.omgXuSLe9NmFzVeHbcurV7G_iuYvjkt0kCuUFX4rR7JGv_meeZAG2ipmHPl8L1DKG44L0DroSdhdFd4p8miGww'
       }
     };
   },
@@ -31,7 +34,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response: AxiosResponse<any, any>) => {
     return new Promise((resolve, reject) => {
-      response?.data?.code === 200 ? resolve(response) : reject(response);
+      !response?.data?.errorMsg ? resolve(response) : reject(response);
     });
   },
   (err) => {
