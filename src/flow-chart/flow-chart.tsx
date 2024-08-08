@@ -16,6 +16,8 @@ import HeaderBar from './components/header-bar';
 import Footer from './components/footer';
 import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
+import { saveRuleDraft, auditRuleDraft } from '@services';
+import { useMutation } from 'react-query';
 
 export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
@@ -35,98 +37,53 @@ const levelColor = {
   3: '#f0f0f0'
 };
 
+enum typeEnum {
+  root = 1,
+  branch = 2,
+  pureNode = 3,
+  node = 3,
+  tip = 4
+}
+
+function basicNode(title: string) {
+  return [
+    {
+      id: 'root',
+      data: {
+        title,
+        metadata: {
+          type: 'root'
+        }
+      },
+      style: { background: '#40a9ff' }
+    }
+  ];
+}
+
+const ruleId = '0c336a0ab34d44d688f9a03316b0a1ed';
+const ruleName = '121d';
+
 function App() {
+  // const { undo, redo } = useFlowEditor();
+  const [edges, setEdges] = useState<FlowViewEdge[]>([]);
+  const [nodes, setNodes] = useState<FlowViewNode[]>(basicNode(ruleName));
   const [selectedId, setSelectedId] = useState<string>('root');
   const [show, setShow] = useState(true);
-  const [edges, setEdges] = useState<FlowViewEdge[]>([
-    {
-      target: 'root&2',
-      source: 'root',
-      id: 'root&2'
-    },
-    {
-      target: 'root&2&1',
-      source: 'root&2',
-      id: 'root&2&1'
-    },
-    {
-      target: 'root&2&1&1',
-      source: 'root&2&1',
-      id: 'root&2&1&1'
-    }
-  ]);
-  const [nodes, setNodes] = useState<FlowViewNode[]>(
-    //   [
-    //   {
-    //     id: 'root',
-    //     data: {
-    //       title: '草药管理',
-    //       metadata: {
-    //         type: 'root'
-    //       }
-    //     },
-    //     style: { background: '#40a9ff' }
-    //   }
-    // ][
-    [
-      {
-        id: 'root',
-        data: {
-          title: '草药管理',
-          metadata: {
-            type: 'root'
-          }
-        },
-        style: {
-          background: '#40a9ff'
-        }
-      },
-      {
-        id: 'root&2',
-        data: {
-          title: 'branch&2',
-          metadata: {
-            type: 'branch'
-          }
-        },
-        style: {
-          background: '#95de64'
-        }
-      },
-      {
-        id: 'root&2&1',
-        data: {
-          title: 'pureNode&1',
-          metadata: {
-            type: 'pureNode'
-          }
-        },
-        style: {
-          background: '#d9f7be'
-        }
-      },
-      {
-        id: 'root&2&1&1',
-        data: {
-          title: 'node&1',
-          metadata: {
-            type: 'node'
-          }
-        },
-        style: {
-          background: '#d9f7be'
-        }
-      }
-    ]
-  );
 
   const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } = useFlowViewer();
-  const { undo, redo } = useFlowEditor();
+
+  const auditRuleMutation = useMutation(auditRuleDraft, { onSuccess: () => {} });
+
+  const saveRuleMutation = useMutation(saveRuleDraft, { onSuccess: () => {} });
 
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 0);
   }, [edges]);
+
+  const nodeNum = nodes.length;
+  const ruleNum = nodes.filter((node) => node.data.metadata.type === 'tip').length;
+  const branchNum = nodes.filter((node) => node.data.metadata.type === 'branch').length;
 
   const onAddBranch = (type: TypeNode) => {
     const reg = new RegExp(`^${selectedId}&`);
@@ -176,7 +133,28 @@ function App() {
   };
 
   const onCopy = () => {
-    console.log('--------nodes:', nodes, '----------edges:', edges);
+    console.log(nodes);
+  };
+  const onConfirm = (type: 'sava' | 'audit') => {
+    const payload = {
+      ruleId,
+      ruleName,
+      ruleBranchNum: branchNum,
+      ruleNum,
+      ruleNodeNum: nodeNum,
+      ruleData: nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          title: undefined,
+          nodeName: node.data.title,
+          nodeType: typeEnum[node.data.metadata.type]
+        }
+      })),
+      ruleRelate: edges
+    };
+
+    type === 'audit' ? auditRuleMutation.mutate(payload) : saveRuleMutation.mutate(payload);
   };
 
   const onFinish = ({ step, values }: FinishParams) => {
@@ -216,6 +194,7 @@ function App() {
         onDelete={onDelete}
         onSearch={onSearch}
         onCopy={onCopy}
+        onConfirm={onConfirm}
       />
       <div className='flex h-[calc(100vh-6rem)]'>
         <div className='flex-1'>
@@ -246,9 +225,9 @@ function App() {
         </div>
       </div>
       <Footer
-        nodeNum={nodes.length}
-        ruleNum={nodes.filter((node) => node.data.metadata.type === 'tip').length}
-        branchNum={nodes.filter((node) => node.data.metadata.type === 'branch').length}
+        nodeNum={nodeNum}
+        ruleNum={ruleNum}
+        branchNum={branchNum}
         version={'草药管理v1.1'}
         auditTime={'2023-07-01'}
       />

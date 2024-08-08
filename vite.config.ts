@@ -29,7 +29,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://47.101.180.183:8016',
+        target: 'http://192.168.2.3:8080',
+        // target: 'http://47.101.180.183:8016',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

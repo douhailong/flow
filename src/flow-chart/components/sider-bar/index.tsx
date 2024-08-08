@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from 'react-query';
 import type { FlowViewNode } from '@ant-design/pro-flow';
 
 import { getDecideTargets, type DecideTargets } from '@services/index';
@@ -16,10 +16,9 @@ export type SiderBarProps = {
 };
 
 const SiderBar: React.FC<SiderBarProps> = (props) => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['getDecideTargets'],
-    queryFn: getDecideTargets
-  });
+  const { data, isLoading, error } = useQuery(['getDecideTargets'], () =>
+    getDecideTargets('ruleNodeCheckParam')
+  );
 
   const type = props.selectedNode?.data.metadata.type;
 
@@ -28,8 +27,6 @@ const SiderBar: React.FC<SiderBarProps> = (props) => {
     .reduce((pre, cur) => (cur.children ? [...pre, ...cur.children] : [...pre, cur]), [])
     // @ts-ignore
     .map((tar) => ({ label: tar.label, value: tar.value }));
-
-  console.log(decideTargetOptions);
 
   return (
     <div className='h-full'>

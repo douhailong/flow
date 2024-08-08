@@ -16,13 +16,13 @@
     "@antv/x6": "^2.18.1",
     "@antv/x6-plugin-keyboard": "^2.2.3",
     "@antv/x6-plugin-selection": "^2.2.2",
-    "@tanstack/react-query": "^5.51.21",
     "antd": "^5.19.3",
     "axios": "^1.7.3",
     "clsx": "^2.1.1",
     "insert-css": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-query": "3.39.1",
     "react-router-dom": "6"
   },
   "devDependencies": {

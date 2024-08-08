@@ -20,6 +20,7 @@ type HeaderBarProps = {
   onDelete: () => void;
   onCopy: () => void;
   onSearch: (value: string) => void;
+  onConfirm: (type: 'sava' | 'audit') => void;
 };
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -27,7 +28,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onAddBranch,
   onDelete,
   onSearch,
-  onCopy
+  onCopy,
+  onConfirm
 }) => {
   const { undo, redo } = useFlowEditor();
 
@@ -42,13 +44,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <div className='h-14 bg-gray-200 flex justify-between items-center px-8'>
       <div className='flex space-x-4'>
-        <button className='text-xs flex flex-col items-center'>
+        <button className='text-xs flex flex-col items-center' onClick={() => onConfirm('sava')}>
           <img width={24} height={24} src={Save} />
           <span>保存</span>
         </button>
-        <button className='text-xs flex flex-col items-center'>
+        <button className='text-xs flex flex-col items-center' onClick={() => onConfirm('audit')}>
           <img width={24} height={24} src={Audit} />
-          <span>提交审核</span>
+          <span>审核</span>
         </button>
       </div>
       <div className='flex space-x-4'>

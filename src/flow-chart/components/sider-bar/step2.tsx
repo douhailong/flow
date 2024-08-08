@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Select, Row, Col, Radio } from 'antd';
 import { FlowViewNode } from '@ant-design/pro-flow';
 import type { SiderBarProps } from './index';
+import { useMutation } from 'react-query';
+import { getDecideTargets, type DecideTargets } from '@services/index';
 
 const relationOptons1 = [
   { value: 'in', label: '属于' },
@@ -34,6 +36,7 @@ const ParentReslut = ({ title }: { title: string }) => (
 const Step2: React.FC<
   SiderBarProps & { decideTargetOptions: { label: string; value: string }[] }
 > = ({ selectedNode, parentNode, onFinish, decideTargetOptions }) => {
+  const [paramValOptions, setParamValOptions] = useState<{ label: string; value: string }[]>([]);
   const [relationOptons, setRelationOptons] = useState(relationOptons2);
   // 0: 属于-字典 1: 属于-关键字 2: 匹配 3: 为空 4:等于/不等于
   const [condition, setCondition] = useState<0 | 1 | 2 | 3 | 4>(0);
@@ -41,15 +44,21 @@ const Step2: React.FC<
 
   const [form] = Form.useForm();
 
+  const { mutate } = useMutation(getDecideTargets, {
+    onSuccess(res) {
+      setParamValOptions(res.data.data);
+    }
+  });
+
   const onValuesChange = (changedValues: any, values: any) => {
     const curKey = Object.keys(changedValues)[0];
-    const keys = ['checkParam', 'connSign', 'descParam', 'ret'];
+    const keys = ['checkParam', 'connSign', 'descParam', 'paramVal'];
     const index = keys.findIndex((key) => key === curKey);
     const needReset = keys.slice(index + 1);
     form.resetFields(needReset);
 
     setDesc(
-      `${form.getFieldValue('checkParam')} ${form.getFieldValue('connSign')} ${form.getFieldValue('ret')}`
+      `${form.getFieldValue('checkParam')} ${form.getFieldValue('connSign')} ${form.getFieldValue('paramVal')}`
     );
 
     if (changedValues.checkParam) {
@@ -125,20 +134,20 @@ const Step2: React.FC<
             )}
 
             {condition === 2 && (
-              <Form.Item name='ret'>
+              <Form.Item name='paramVal'>
                 <Input className='mb-2' placeholder='请输入' />
               </Form.Item>
             )}
 
             {condition === 4 && (
-              <Form.Item name='ret'>
+              <Form.Item name='paramVal'>
                 <Select placeholder='请选择' options={decideTargetOptions} />
               </Form.Item>
             )}
           </Col>
         </Row>
         {(condition === 0 || condition === 1) && (
-          <Form.Item name='ret'>
+          <Form.Item name='paramVal'>
             {condition ? (
               <Input placeholder='请输入' />
             ) : (
@@ -146,10 +155,10 @@ const Step2: React.FC<
                 allowClear
                 mode='multiple'
                 placeholder='请选择'
-                options={[
-                  { value: 1, label: ', kbk' },
-                  { value: 2, label: 'jbjbbjjb' }
-                ]}
+                options={paramValOptions}
+                onDropdownVisibleChange={(open) => {
+                  open === true && mutate(form.getFieldValue('checkParam'));
+                }}
               />
             )}
           </Form.Item>
