@@ -34,12 +34,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const { undo, redo } = useFlowEditor();
 
   const isTipDisaled = () =>
-    selectedNode?.data.metadata.type !== 'node' && selectedNode?.data.metadata.type !== 'pureNode';
+    selectedNode?.data.type !== 'node' && selectedNode?.data.type !== 'pureNode';
 
   const isNodeDisaled = () =>
-    selectedNode?.data.metadata.type !== 'branch' &&
-    selectedNode?.data.metadata.type !== 'node' &&
-    selectedNode?.data.metadata.type !== 'pureNode';
+    selectedNode?.data.type !== 'branch' &&
+    selectedNode?.data.type !== 'node' &&
+    selectedNode?.data.type !== 'pureNode';
 
   return (
     <div className='h-14 bg-gray-200 flex justify-between items-center px-8'>
@@ -70,9 +70,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <button
           className='text-xs flex flex-col items-center'
           disabled={isNodeDisaled()}
-          onClick={() =>
-            onAddBranch(selectedNode?.data.metadata.type === 'branch' ? 'pureNode' : 'node')
-          }
+          onClick={() => onAddBranch(selectedNode?.data.type === 'branch' ? 'pureNode' : 'node')}
         >
           <img
             width={24}

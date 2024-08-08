@@ -20,7 +20,7 @@ const SiderBar: React.FC<SiderBarProps> = (props) => {
     getDecideTargets('ruleNodeCheckParam')
   );
 
-  const type = props.selectedNode?.data.metadata.type;
+  const type = props.selectedNode?.data.type;
 
   const decideTargetOptions = data?.data.data
     // @ts-ignore

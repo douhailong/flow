@@ -16,8 +16,8 @@ import HeaderBar from './components/header-bar';
 import Footer from './components/footer';
 import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
-import { saveRuleDraft, auditRuleDraft } from '@services';
-import { useMutation } from 'react-query';
+import { saveRuleDraft, auditRuleDraft, getTreeData } from '@services';
+import { useMutation, useQuery } from 'react-query';
 
 export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
@@ -51,9 +51,7 @@ function basicNode(title: string) {
       id: 'root',
       data: {
         title,
-        metadata: {
-          type: 'root'
-        }
+        type: 'root'
       },
       style: { background: '#40a9ff' }
     }
@@ -72,8 +70,20 @@ function App() {
 
   const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } = useFlowViewer();
 
+  const getTreeQuery = useQuery(
+    ['getTreeData'],
+    () => getTreeData({ ruleId: ruleId, ruleType: '3' }),
+    {
+      onSuccess(res) {
+        const data = res.data.data;
+        setEdges(JSON.parse(data.ruleRelateJson));
+        setNodes(JSON.parse(data.ruleDataJson));
+        const r = { nodes: JSON.parse(data.ruleDataJson), edges: JSON.parse(data.ruleRelateJson) };
+        console.log(r, 'rrrrr');
+      }
+    }
+  );
   const auditRuleMutation = useMutation(auditRuleDraft, { onSuccess: () => {} });
-
   const saveRuleMutation = useMutation(saveRuleDraft, { onSuccess: () => {} });
 
   useEffect(() => {
@@ -82,8 +92,8 @@ function App() {
   }, [edges]);
 
   const nodeNum = nodes.length;
-  const ruleNum = nodes.filter((node) => node.data.metadata.type === 'tip').length;
-  const branchNum = nodes.filter((node) => node.data.metadata.type === 'branch').length;
+  const ruleNum = nodes.filter((node) => node.data.type === 'tip').length;
+  const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
 
   const onAddBranch = (type: TypeNode) => {
     const reg = new RegExp(`^${selectedId}&`);
@@ -102,9 +112,7 @@ function App() {
         id: `${selectedId}&${preNum + 1}`,
         data: {
           title: `${type}&请设置节点内容`,
-          metadata: {
-            type
-          }
+          type
         },
         style: { background: nodeColor[type] }
       }
@@ -146,9 +154,8 @@ function App() {
         ...node,
         data: {
           ...node.data,
-          title: undefined,
           nodeName: node.data.title,
-          nodeType: typeEnum[node.data.metadata.type]
+          nodeType: typeEnum[node.data.type]
         }
       })),
       ruleRelate: edges
@@ -178,7 +185,9 @@ function App() {
                 ...node,
                 data: {
                   ...node.data,
-                  logo: values.sourceResult === 'T' ? Yes : No
+                  needJson: 'T',
+                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                  jsonData: values
                 }
               }
             : node;

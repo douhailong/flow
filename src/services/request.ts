@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import { apiBaseUrl } from '@config';
 import { message } from 'antd';
@@ -24,7 +24,7 @@ instance.interceptors.request.use(
           token ||
           'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzIzNjE4OTQxLCJpYXQiOjE3MjMwMTQxNDEsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.omgXuSLe9NmFzVeHbcurV7G_iuYvjkt0kCuUFX4rR7JGv_meeZAG2ipmHPl8L1DKG44L0DroSdhdFd4p8miGww'
       }
-    };
+    } as InternalAxiosRequestConfig<any>;
   },
   (err) => {
     return Promise.reject(err);

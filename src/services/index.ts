@@ -49,3 +49,17 @@ export function auditRuleDraft(data: SaveRuleDraftProps) {
     data
   });
 }
+
+export type GetTreeDataProps = {
+  ruleId: string;
+  ruleType: string;
+  ruleVersion?: string;
+};
+
+export function getTreeData(data: GetTreeDataProps) {
+  return request<any>({
+    method: 'post',
+    url: '/recipehub/recipeRule/getRuleJsonData',
+    data
+  });
+}

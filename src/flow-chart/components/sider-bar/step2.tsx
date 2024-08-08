@@ -44,6 +44,24 @@ const Step2: React.FC<
 
   const [form] = Form.useForm();
 
+  const map = {};
+  [...relationOptons2, ...decideTargetOptions].forEach((item) => {
+    // @ts-ignore
+    map[item.value] = item.label;
+  });
+
+  useEffect(() => {
+    form.setFieldsValue(selectedNode?.data.jsonData);
+    // setCondition()
+  }, [selectedNode?.id]);
+
+  useEffect(() => {
+    setDesc(
+      // @ts-ignore
+      `${map[form.getFieldValue('checkParam')]} ${map[form.getFieldValue('connSign')]} ${form.getFieldValue('paramVal') || ''}`
+    );
+  }, [form.getFieldsValue()]);
+
   const { mutate } = useMutation(getDecideTargets, {
     onSuccess(res) {
       setParamValOptions(res.data.data);
@@ -51,15 +69,15 @@ const Step2: React.FC<
   });
 
   const onValuesChange = (changedValues: any, values: any) => {
+    console.log(111111111);
+    if (changedValues.sourceResult) return;
+    console.log(2222222222222222);
+
     const curKey = Object.keys(changedValues)[0];
     const keys = ['checkParam', 'connSign', 'descParam', 'paramVal'];
     const index = keys.findIndex((key) => key === curKey);
     const needReset = keys.slice(index + 1);
     form.resetFields(needReset);
-
-    setDesc(
-      `${form.getFieldValue('checkParam')} ${form.getFieldValue('connSign')} ${form.getFieldValue('paramVal')}`
-    );
 
     if (changedValues.checkParam) {
       setRelationOptons(
@@ -76,6 +94,7 @@ const Step2: React.FC<
     }
 
     if (changedValues.connSign) {
+      console.log(33333333333333);
       const getStatus = () => {
         switch (changedValues.connSign) {
           case 'in':
@@ -96,6 +115,8 @@ const Step2: React.FC<
     }
   };
 
+  // console.log(selectedNode);
+
   return (
     <div>
       <div className='pb-2'>节点详情</div>
@@ -107,9 +128,7 @@ const Step2: React.FC<
         }}
         onValuesChange={onValuesChange}
       >
-        {selectedNode?.data.metadata.type === 'node' && (
-          <ParentReslut title={parentNode?.data.title} />
-        )}
+        {selectedNode?.data.type === 'node' && <ParentReslut title={parentNode?.data.title} />}
         <div className='text-sm mb-2'>节点设置</div>
         <Form.Item name='checkParam' initialValue={'specialBoilType'}>
           <Select placeholder='请选择' options={decideTargetOptions} />
