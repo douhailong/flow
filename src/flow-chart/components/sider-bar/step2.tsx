@@ -19,7 +19,7 @@ const ParentReslut = ({ title }: { title: string }) => (
     <div className='text-sm mb-2'>节点判断</div>
     <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2'>{title}</div>
     <div className='text-sm text-gray-600 mb-2'>若上述逻辑条件</div>
-    <Form.Item name='sourceResult' noStyle initialValue={1}>
+    <Form.Item name='sourceResult' noStyle initialValue='T'>
       <Radio.Group>
         <Radio className='w-full mb-2' value='T'>
           是（即条件成立）
@@ -39,28 +39,30 @@ const Step2: React.FC<
   const [paramValOptions, setParamValOptions] = useState<{ label: string; value: string }[]>([]);
   const [relationOptons, setRelationOptons] = useState(relationOptons2);
   // 0: 属于-字典 1: 属于-关键字 2: 匹配 3: 为空 4:等于/不等于
-  const [condition, setCondition] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [condition, setCondition] = useState<'in' | '!in' | 'like' | 'isnull' | 'eq'>('in');
   const [desc, setDesc] = useState('');
+  const [descParam, setDescParam] = useState<'desc' | 'word'>('desc');
+  const [checkParam, setCheckParam] = useState('specialBoilType');
 
   const [form] = Form.useForm();
 
-  const map = {};
-  [...relationOptons2, ...decideTargetOptions].forEach((item) => {
-    // @ts-ignore
+  const map: Record<string, any> = {};
+  [...relationOptons2, ...decideTargetOptions, ...paramValOptions].forEach((item) => {
     map[item.value] = item.label;
   });
 
   useEffect(() => {
-    form.setFieldsValue(selectedNode?.data.jsonData);
-    // setCondition()
+    if (selectedNode?.data.jsonData) {
+      form.setFieldsValue(selectedNode?.data.jsonData);
+      setDescParam(selectedNode?.data.jsonData?.descParam || 'desc');
+      setDesc(selectedNode?.data.jsonData?.title);
+      mutate(form.getFieldValue('checkParam'));
+      setCheckParam(form.getFieldValue('checkParam'));
+    } else {
+      form.resetFields();
+      setDesc('');
+    }
   }, [selectedNode?.id]);
-
-  useEffect(() => {
-    setDesc(
-      // @ts-ignore
-      `${map[form.getFieldValue('checkParam')]} ${map[form.getFieldValue('connSign')]} ${form.getFieldValue('paramVal') || ''}`
-    );
-  }, [form.getFieldsValue()]);
 
   const { mutate } = useMutation(getDecideTargets, {
     onSuccess(res) {
@@ -69,9 +71,14 @@ const Step2: React.FC<
   });
 
   const onValuesChange = (changedValues: any, values: any) => {
-    console.log(111111111);
     if (changedValues.sourceResult) return;
-    console.log(2222222222222222);
+
+    const paramVal = form.getFieldValue('paramVal');
+    const de1 = map[form.getFieldValue('checkParam')];
+    const de2 = map[form.getFieldValue('connSign')];
+    const de3 = (Array.isArray(paramVal) ? paramVal.map((i) => map[i]).join('，') : paramVal) || '';
+
+    setDesc(`${de1} ${de2} ${de3}`);
 
     const curKey = Object.keys(changedValues)[0];
     const keys = ['checkParam', 'connSign', 'descParam', 'paramVal'];
@@ -86,36 +93,21 @@ const Step2: React.FC<
           ? relationOptons2
           : relationOptons1
       );
-      setCondition(0);
+      setCondition('in');
+      setDescParam('desc');
+      setCheckParam(changedValues.checkParam);
     }
 
     if (changedValues.descParam) {
-      setCondition(changedValues.descParam === 'dict' ? 0 : 1);
+      setCondition(changedValues.descParam === 'dict' ? 'in' : '!in');
+      setDescParam(changedValues.descParam);
     }
 
     if (changedValues.connSign) {
-      console.log(33333333333333);
-      const getStatus = () => {
-        switch (changedValues.connSign) {
-          case 'in':
-            return 0;
-          case '!in':
-            return 0;
-          case 'like':
-            return 2;
-          case 'isnull':
-            return 3;
-          case 'eq':
-            return 4;
-          default:
-            return 0;
-        }
-      };
-      setCondition(getStatus());
+      setCondition(changedValues.connSign);
+      setDescParam('desc');
     }
   };
-
-  // console.log(selectedNode);
 
   return (
     <div>
@@ -124,7 +116,7 @@ const Step2: React.FC<
         clearOnDestroy
         form={form}
         onFinish={(values) => {
-          onFinish({ step: 2, values });
+          onFinish({ step: 2, values: { ...values, title: desc } });
         }}
         onValuesChange={onValuesChange}
       >
@@ -133,41 +125,43 @@ const Step2: React.FC<
         <Form.Item name='checkParam' initialValue={'specialBoilType'}>
           <Select placeholder='请选择' options={decideTargetOptions} />
         </Form.Item>
-        <Row gutter={12}>
-          <Col span={12}>
-            <Form.Item name='connSign' initialValue={'in'}>
-              <Select placeholder='请选择' options={relationOptons} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            {(condition === 0 || condition === 1) && (
-              <Form.Item name='descParam' initialValue={'dict'}>
-                <Select
-                  placeholder='请选择'
-                  options={[
-                    { value: 'dict', label: '字典' },
-                    { value: 'word', label: '关键字' }
-                  ]}
-                />
+        {checkParam !== 'toxicPieces' && (
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name='connSign' initialValue={'in'}>
+                <Select placeholder='请选择' options={relationOptons} />
               </Form.Item>
-            )}
+            </Col>
+            <Col span={12}>
+              {(condition === 'in' || condition === '!in') && (
+                <Form.Item name='descParam' initialValue={'dict'}>
+                  <Select
+                    placeholder='请选择'
+                    options={[
+                      { value: 'dict', label: '字典' },
+                      { value: 'word', label: '关键字' }
+                    ]}
+                  />
+                </Form.Item>
+              )}
 
-            {condition === 2 && (
-              <Form.Item name='paramVal'>
-                <Input className='mb-2' placeholder='请输入' />
-              </Form.Item>
-            )}
+              {condition === 'like' && (
+                <Form.Item name='paramVal'>
+                  <Input className='mb-2' placeholder='请输入' />
+                </Form.Item>
+              )}
 
-            {condition === 4 && (
-              <Form.Item name='paramVal'>
-                <Select placeholder='请选择' options={decideTargetOptions} />
-              </Form.Item>
-            )}
-          </Col>
-        </Row>
-        {(condition === 0 || condition === 1) && (
+              {condition === 'eq' && (
+                <Form.Item name='paramVal'>
+                  <Select placeholder='请选择' options={decideTargetOptions} />
+                </Form.Item>
+              )}
+            </Col>
+          </Row>
+        )}
+        {(condition === 'in' || condition === '!in') && (
           <Form.Item name='paramVal'>
-            {condition ? (
+            {descParam === 'word' ? (
               <Input placeholder='请输入' />
             ) : (
               <Select

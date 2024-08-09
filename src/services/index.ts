@@ -45,7 +45,7 @@ export function saveRuleDraft(data: SaveRuleDraftProps) {
 export function auditRuleDraft(data: SaveRuleDraftProps) {
   return request<any>({
     method: 'post',
-    url: '/recipehub/recipeRuleDraft/saveRuleDraft',
+    url: '/recipehub/recipeRuleDraft/auditRuleDraft',
     data
   });
 }

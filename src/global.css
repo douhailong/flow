@@ -44,12 +44,50 @@ button[disabled] {
   color: initial !important;
 } */
 
+.ant-xx {
+  border: none !important;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  padding: 12px 8px !important;
+  /* box-shadow: none !important; */
+}
+
 .ant-xx .img {
   opacity: 0;
+  width: 14px !important;
+  height: 14px !important;
 }
 
 .ant-xx .img[src] {
   opacity: 1;
+}
+
+.ant-xx .title span {
+  font-size: 13px !important;
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  white-space: pre-wrap !important;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.ant-xx .title > div {
+  width: 0;
+  margin-left: 0px;
+}
+
+.ant-xx .title > div :last-child {
+  border: 1px solid green;
+  border-radius: 9999px;
+  width: 14px;
+  height: 14px;
+  text-align: center;
+  line-height: 14px;
+  font-size: 10px;
+  color: green;
 }
 
 .ant-form-item {

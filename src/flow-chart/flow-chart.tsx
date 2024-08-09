@@ -58,8 +58,8 @@ function basicNode(title: string) {
   ];
 }
 
-const ruleId = '0c336a0ab34d44d688f9a03316b0a1ed';
-const ruleName = '121d';
+const ruleId = sessionStorage.getItem('ruleId') || '95cbe6bb2f024ac7bf586f28be7b6a71';
+const ruleName = sessionStorage.getItem('ruleName') || '测试规则bbb';
 
 function App() {
   // const { undo, redo } = useFlowEditor();
@@ -76,15 +76,23 @@ function App() {
     {
       onSuccess(res) {
         const data = res.data.data;
-        setEdges(JSON.parse(data.ruleRelateJson));
-        setNodes(JSON.parse(data.ruleDataJson));
-        const r = { nodes: JSON.parse(data.ruleDataJson), edges: JSON.parse(data.ruleRelateJson) };
-        console.log(r, 'rrrrr');
+        if (data.ruleDataJson && data.ruleRelateJson) {
+          setEdges(JSON.parse(data.ruleRelateJson));
+          setNodes(JSON.parse(data.ruleDataJson));
+        }
       }
     }
   );
-  const auditRuleMutation = useMutation(auditRuleDraft, { onSuccess: () => {} });
-  const saveRuleMutation = useMutation(saveRuleDraft, { onSuccess: () => {} });
+  const auditRuleMutation = useMutation(auditRuleDraft, {
+    onSuccess() {
+      getTreeQuery.refetch();
+    }
+  });
+  const saveRuleMutation = useMutation(saveRuleDraft, {
+    onSuccess() {
+      getTreeQuery.refetch();
+    }
+  });
 
   useEffect(() => {
     setShow(false);
@@ -186,9 +194,36 @@ function App() {
                 data: {
                   ...node.data,
                   needJson: 'T',
+                  title: values.title,
+                  sourceResult: values.sourceResult,
                   logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                   jsonData: values
                 }
+              }
+            : node;
+        })
+      );
+    }
+
+    if (step === 3) {
+      setNodes(
+        nodes.map((node) => {
+          return node.id === selectedId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  title: values.title,
+                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                  sourceResult: values.sourceResult,
+                  isWarnUse: values.isWarnUse,
+                  warnContent: values,
+                  titleSlot: {
+                    type: 'right',
+                    value: values.warnLevel === 3 ? '✘' : '✔'
+                  }
+                },
+                style: { background: levelColor[values.warnLevel] }
               }
             : node;
         })
