@@ -21,8 +21,6 @@ import { useMutation, useQuery } from 'react-query';
 
 export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
 
-const mode = 'redaonly';
-
 const nodeColor = {
   root: '#40a9ff',
   branch: '#95de64',
@@ -58,8 +56,10 @@ function basicNode(title: string) {
   ];
 }
 
-const ruleId = sessionStorage.getItem('ruleId') || '95cbe6bb2f024ac7bf586f28be7b6a71';
-const ruleName = sessionStorage.getItem('ruleName') || '测试规则bbb';
+const ruleId = sessionStorage.getItem('ruleId')!;
+const ruleName = sessionStorage.getItem('ruleName')!;
+const ruleVersion = sessionStorage.getItem('version')!;
+const ruleType = sessionStorage.getItem('ruleType')!;
 
 function App() {
   // const { undo, redo } = useFlowEditor();
@@ -72,7 +72,7 @@ function App() {
 
   const getTreeQuery = useQuery(
     ['getTreeData'],
-    () => getTreeData({ ruleId: ruleId, ruleType: '3' }),
+    () => getTreeData({ ruleId, ruleVersion, ruleType }),
     {
       onSuccess(res) {
         const data = res.data.data;
@@ -103,6 +103,9 @@ function App() {
   const ruleNum = nodes.filter((node) => node.data.type === 'tip').length;
   const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
 
+  type ModeType = 'readonly' | 'mutable' | 'check';
+  const mode: ModeType = sessionStorage.getItem('mode') as ModeType;
+
   const onAddBranch = (type: TypeNode) => {
     const reg = new RegExp(`^${selectedId}&`);
     const filter = nodes.filter(
@@ -119,7 +122,7 @@ function App() {
       {
         id: `${selectedId}&${preNum + 1}`,
         data: {
-          title: `${type}&请设置节点内容`,
+          title: `请设置节点内容`,
           type
         },
         style: { background: nodeColor[type] }
@@ -141,10 +144,21 @@ function App() {
     setEdges(edges.filter((edge) => !edge.id.startsWith(selectedId)));
   };
 
-  const onSearch = (value: string) => {
+  const onSearch = (value: string, clear: boolean) => {
+    if (clear) {
+      return selectNodes(
+        nodes.map((node) => node.id),
+        SelectType.DEFAULT
+      );
+    }
     selectNodes(
       nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
       SelectType.SELECT
+    );
+
+    selectNodes(
+      nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
+      SelectType.DEFAULT
     );
   };
 
@@ -239,6 +253,7 @@ function App() {
         onSearch={onSearch}
         onCopy={onCopy}
         onConfirm={onConfirm}
+        mode={mode}
       />
       <div className='flex h-[calc(100vh-6rem)]'>
         <div className='flex-1'>
@@ -258,23 +273,19 @@ function App() {
             />
           )}
         </div>
-        <div className='w-72 p-2 overflow-y-auto relative'>
-          <SiderBar
-            parentNode={nodes.find(
-              (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
-            )}
-            selectedNode={nodes.find((node) => node.id === selectedId)}
-            onFinish={onFinish}
-          />
-        </div>
+        {mode === 'mutable' && (
+          <div className='w-72 p-2 overflow-y-auto relative'>
+            <SiderBar
+              parentNode={nodes.find(
+                (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
+              )}
+              selectedNode={nodes.find((node) => node.id === selectedId)}
+              onFinish={onFinish}
+            />
+          </div>
+        )}
       </div>
-      <Footer
-        nodeNum={nodeNum}
-        ruleNum={ruleNum}
-        branchNum={branchNum}
-        version={'草药管理v1.1'}
-        auditTime={'2023-07-01'}
-      />
+      <Footer nodeNum={nodeNum} ruleNum={ruleNum} branchNum={branchNum} />
     </div>
   );
 }
