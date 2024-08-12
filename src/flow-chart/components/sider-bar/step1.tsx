@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { Button, Form, Input, message } from 'antd';
-import { FlowViewNode } from '@ant-design/pro-flow';
-import type { SiderBarProps } from './index';
+import type { SiderBarProps } from './';
 
-const Step1: React.FC<SiderBarProps & { prefix: string }> = ({
+const Step1: React.FC<SiderBarProps & { prefix: '规则' | '分支' }> = ({
   selectedNode,
   onFinish,
   prefix
@@ -12,7 +11,7 @@ const Step1: React.FC<SiderBarProps & { prefix: string }> = ({
 
   useEffect(() => {
     form.setFieldsValue({ title: selectedNode?.data.title });
-  }, [selectedNode?.id]);
+  }, [selectedNode.id]);
 
   return (
     <div>
@@ -23,12 +22,12 @@ const Step1: React.FC<SiderBarProps & { prefix: string }> = ({
         onFinish={(values) => {
           const trimTitle = values.title.trim();
           trimTitle === ''
-            ? message.error('请输入分支名称')
-            : onFinish({ step: 1, values: { title: trimTitle } });
+            ? message.error(`请输入${prefix}名称`)
+            : onFinish({ step: 1, title: trimTitle });
         }}
       >
         <Form.Item name='title'>
-          <Input placeholder='请输入分支名称' />
+          <Input placeholder={`请输入${prefix}名称`} />
         </Form.Item>
         <Form.Item>
           <Button type='primary' block htmlType='submit'>

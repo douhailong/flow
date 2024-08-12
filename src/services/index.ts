@@ -11,7 +11,7 @@ export type DecideTargets = {
   }[];
 };
 
-export function getDecideTargets(
+export function getCategorys(
   code:
     | 'ruleNodeCheckParam'
     | 'specialBoilType'

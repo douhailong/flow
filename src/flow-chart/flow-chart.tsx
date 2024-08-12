@@ -5,73 +5,48 @@ import {
   FlowViewProvider,
   SelectType,
   useFlowViewer,
-  FlowEditorProvider,
-  useFlowEditor
+  FlowEditorProvider
 } from '@ant-design/pro-flow';
 import { useEffect, useState } from 'react';
-import clsx from 'clsx';
 import SiderBar from './components/sider-bar';
-import type { FinishParams } from './components/sider-bar';
 import HeaderBar from './components/header-bar';
 import Footer from './components/footer';
-import No from '@assets/no.png';
-import Yes from '@assets/yes.png';
+import {
+  type SubmitType,
+  type NodeType,
+  nodeColors,
+  levelColors,
+  nodeTypeMapping,
+  RootNode,
+  ruleId,
+  ruleName,
+  ruleVersion,
+  ruleType,
+  mode
+} from './utils';
+import type { OnFinishProps } from './components/sider-bar';
+
 import { saveRuleDraft, auditRuleDraft, getTreeData } from '@services';
 import { useMutation, useQuery } from 'react-query';
 
-export type TypeNode = 'root' | 'branch' | 'pureNode' | 'node' | 'tip';
-
-const nodeColor = {
-  root: '#40a9ff',
-  branch: '#95de64',
-  node: '#d9f7be',
-  pureNode: '#d9f7be',
-  tip: '#ffd6e7'
-};
-
-const levelColor = {
-  1: '#ffd6e7',
-  2: '#ffe58f',
-  3: '#f0f0f0'
-};
-
-enum typeEnum {
-  root = 1,
-  branch = 2,
-  pureNode = 3,
-  node = 3,
-  tip = 4
-}
-
-function basicNode(title: string) {
-  return [
-    {
-      id: 'root',
-      data: {
-        title,
-        type: 'root'
-      },
-      style: { background: '#40a9ff' }
-    }
-  ];
-}
-
-const ruleId = sessionStorage.getItem('ruleId')!;
-const ruleName = sessionStorage.getItem('ruleName')!;
-const ruleVersion = sessionStorage.getItem('version')!;
-const ruleType = sessionStorage.getItem('ruleType')!;
+import No from '@assets/no.png';
+import Yes from '@assets/yes.png';
 
 function App() {
-  // const { undo, redo } = useFlowEditor();
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
-  const [nodes, setNodes] = useState<FlowViewNode[]>(basicNode(ruleName));
+  const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(ruleName));
   const [selectedId, setSelectedId] = useState<string>('root');
   const [show, setShow] = useState(true);
 
-  const { selectNode, selectEdges, selectNodes, zoomToNode, fullScreen } = useFlowViewer();
+  useEffect(() => {
+    setShow(false);
+    setTimeout(() => setShow(true), 0);
+  }, [edges]);
+
+  const { selectNode, selectNodes } = useFlowViewer();
 
   const getTreeQuery = useQuery(
-    ['getTreeData'],
+    ['getTreeQuery'],
     () => getTreeData({ ruleId, ruleVersion, ruleType }),
     {
       onSuccess(res) {
@@ -83,30 +58,28 @@ function App() {
       }
     }
   );
+
   const auditRuleMutation = useMutation(auditRuleDraft, {
     onSuccess() {
       getTreeQuery.refetch();
     }
   });
+
   const saveRuleMutation = useMutation(saveRuleDraft, {
     onSuccess() {
       getTreeQuery.refetch();
     }
   });
 
-  useEffect(() => {
-    setShow(false);
-    setTimeout(() => setShow(true), 0);
-  }, [edges]);
-
   const nodeNum = nodes.length;
   const ruleNum = nodes.filter((node) => node.data.type === 'tip').length;
   const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
+  const selectedNode = nodes.find((node) => node.id === selectedId);
+  const parentNode = nodes.find(
+    (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
+  );
 
-  type ModeType = 'readonly' | 'mutable' | 'check';
-  const mode: ModeType = sessionStorage.getItem('mode') as ModeType;
-
-  const onAddBranch = (type: TypeNode) => {
+  const onAddBranch = (type: NodeType) => {
     const reg = new RegExp(`^${selectedId}&`);
     const filter = nodes.filter(
       (node) =>
@@ -122,10 +95,10 @@ function App() {
       {
         id: `${selectedId}&${preNum + 1}`,
         data: {
-          title: `请设置节点内容`,
+          title: `请设置内容`,
           type
         },
-        style: { background: nodeColor[type] }
+        style: { background: nodeColors[type] }
       }
     ]);
 
@@ -144,7 +117,7 @@ function App() {
     setEdges(edges.filter((edge) => !edge.id.startsWith(selectedId)));
   };
 
-  const onSearch = (value: string, clear: boolean) => {
+  const onSearch = (value: string, clear?: boolean) => {
     if (clear) {
       return selectNodes(
         nodes.map((node) => node.id),
@@ -155,46 +128,46 @@ function App() {
       nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
       SelectType.SELECT
     );
-
     selectNodes(
       nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
       SelectType.DEFAULT
     );
   };
 
+  // TODO
   const onCopy = () => {
     console.log(nodes);
   };
-  const onConfirm = (type: 'sava' | 'audit') => {
+
+  const onSubmit = (type: SubmitType) => {
     const payload = {
       ruleId,
+      ruleNum,
       ruleName,
       ruleBranchNum: branchNum,
-      ruleNum,
       ruleNodeNum: nodeNum,
+      ruleRelate: edges,
       ruleData: nodes.map((node) => ({
         ...node,
         data: {
           ...node.data,
           nodeName: node.data.title,
-          nodeType: typeEnum[node.data.type]
+          nodeType: nodeTypeMapping[node.data.type as NodeType]
         }
-      })),
-      ruleRelate: edges
+      }))
     };
 
-    type === 'audit' ? auditRuleMutation.mutate(payload) : saveRuleMutation.mutate(payload);
+    type === 'audit' && auditRuleMutation.mutate(payload);
+    type === 'sava' && saveRuleMutation.mutate(payload);
   };
 
-  const onFinish = ({ step, values }: FinishParams) => {
-    console.log(values);
+  const onFinish = ({ step, values, title }: OnFinishProps) => {
+    console.log(values, title, 'onfinished');
 
     if (step === 1) {
       setNodes(
         nodes.map((node) => {
-          return node.id === selectedId
-            ? { ...node, data: { ...node.data, title: values.title } }
-            : node;
+          return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
         })
       );
     }
@@ -208,7 +181,7 @@ function App() {
                 data: {
                   ...node.data,
                   needJson: 'T',
-                  title: values.title,
+                  title,
                   sourceResult: values.sourceResult,
                   logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                   jsonData: values
@@ -237,22 +210,23 @@ function App() {
                     value: values.warnLevel === 3 ? '✘' : '✔'
                   }
                 },
-                style: { background: levelColor[values.warnLevel] }
+                style: { background: levelColors[values.warnLevel] }
               }
             : node;
         })
       );
     }
   };
+
   return (
     <div className='h-full'>
       <HeaderBar
-        selectedNode={nodes.find((node) => node.id === selectedId)}
+        selectedNode={selectedNode}
         onAddBranch={onAddBranch}
         onDelete={onDelete}
         onSearch={onSearch}
         onCopy={onCopy}
-        onConfirm={onConfirm}
+        onSubmit={onSubmit}
         mode={mode}
       />
       <div className='flex h-[calc(100vh-6rem)]'>
@@ -275,13 +249,7 @@ function App() {
         </div>
         {mode === 'mutable' && (
           <div className='w-72 p-2 overflow-y-auto relative'>
-            <SiderBar
-              parentNode={nodes.find(
-                (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
-              )}
-              selectedNode={nodes.find((node) => node.id === selectedId)}
-              onFinish={onFinish}
-            />
+            <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
           </div>
         )}
       </div>

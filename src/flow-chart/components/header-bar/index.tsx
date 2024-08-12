@@ -1,7 +1,9 @@
 import React from 'react';
 import { Input } from 'antd';
-import { type FlowViewEdge, type FlowViewNode, useFlowEditor } from '@ant-design/pro-flow';
-import type { TypeNode } from '../../flow-chart';
+import clsx from 'clsx';
+import { type FlowViewNode, useFlowEditor } from '@ant-design/pro-flow';
+import type { NodeType } from '../../utils';
+
 import Copy from '@assets/copy.png';
 import Branch from '@assets/branch.png';
 import Audit from '@assets/audit.png';
@@ -12,15 +14,16 @@ import Redo from '@assets/redo.png';
 import Undo from '@assets/undo.png';
 import Share from '@assets/share.png';
 import Tip from '@assets/tip.png';
-import clsx from 'clsx';
+import Running from '@assets/running.png';
+import Edit from '@assets/edit.png';
 
 type HeaderBarProps = {
   selectedNode?: FlowViewNode;
-  onAddBranch: (type: TypeNode) => void;
+  onAddBranch: (type: NodeType) => void;
   onDelete: () => void;
   onCopy: () => void;
   onSearch: (value: string, clear?: boolean) => void;
-  onConfirm: (type: 'sava' | 'audit') => void;
+  onSubmit: (type: 'sava' | 'audit') => void;
   mode: string;
 };
 
@@ -30,34 +33,29 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onDelete,
   onSearch,
   onCopy,
-  onConfirm,
+  onSubmit,
   mode
 }) => {
   const { undo, redo } = useFlowEditor();
 
-  const isTipDisaled = () =>
-    selectedNode?.data.type !== 'node' && selectedNode?.data.type !== 'pureNode';
+  const type = selectedNode?.data.type;
 
-  const isNodeDisaled = () =>
-    selectedNode?.data.type !== 'branch' &&
-    selectedNode?.data.type !== 'node' &&
-    selectedNode?.data.type !== 'pureNode';
+  const isTipDisaled = () => type !== 'node' && type !== 'pureNode';
+
+  const isNodeDisaled = () => type !== 'branch' && type !== 'node' && type !== 'pureNode';
 
   return (
     <div className='h-14 bg-gray-200 flex justify-between items-center px-8'>
       {mode === 'mutable' ? (
         <>
           <div className='flex space-x-4'>
-            <button
-              className='text-xs flex flex-col items-center'
-              onClick={() => onConfirm('sava')}
-            >
+            <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
               <img width={24} height={24} src={Save} />
               <span>保存</span>
             </button>
             <button
               className='text-xs flex flex-col items-center'
-              onClick={() => onConfirm('audit')}
+              onClick={() => onSubmit('audit')}
             >
               <img width={24} height={24} src={Audit} />
               <span>审核</span>
@@ -80,9 +78,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             <button
               className='text-xs flex flex-col items-center'
               disabled={isNodeDisaled()}
-              onClick={() =>
-                onAddBranch(selectedNode?.data.type === 'branch' ? 'pureNode' : 'node')
-              }
+              onClick={() => onAddBranch(type === 'branch' ? 'pureNode' : 'node')}
             >
               <img
                 width={24}
@@ -137,6 +133,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
           </div>
         </>
+      ) : mode === 'check' ? (
+        <div className='flex space-x-4'>
+          <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
+            <img width={24} height={24} src={Edit} />
+            <span>编辑规则</span>
+          </button>
+          <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
+            <img width={24} height={24} src={Running} />
+            <span>运行中规则</span>
+          </button>
+        </div>
       ) : (
         <div></div>
       )}
