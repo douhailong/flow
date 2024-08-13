@@ -38,7 +38,7 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         form={form}
         onFinish={(values) => {
           const title = `${arr[form.getFieldValue('warnLevel') - 1]} ${form.getFieldValue('warnContent')}\n建议：${form.getFieldValue('suggestion')}`;
-          onFinish({ step: 3, values: { ...values } });
+          onFinish({ step: 3, values, title });
         }}
       >
         <Form.Item name='sourceResult' noStyle initialValue='T'>

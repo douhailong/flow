@@ -1,132 +1,188 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Input, message, Select, Row, Col, Radio } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Form, Input, message, Select, Row, Col, Radio, Modal, Transfer, Tree } from 'antd';
+import type { GetProp, TransferProps, TreeDataNode } from 'antd';
 import { useMutation, useQuery } from 'react-query';
 
-import type { SiderBarProps } from './';
+import TransferTree from './transfer-tree';
+import TransferTable from './transfer-table';
 
+import type { TransferData } from './transfer-tree';
+import type { SiderBarProps } from './';
 import {
   type Option,
+  type CategoryType,
+  type RelationType,
   relationOpts1,
   relationOpts2,
   contrastOpts,
   timeOpts,
   logicOpts
 } from './utils';
-import { getCategorys, type DecideTargets } from '@services/index';
+import { getCategorys, type GetCategory } from '@services';
+import clsx from 'clsx';
 
-const Step2: React.FC<
-  SiderBarProps & { decideTargetOptions: { label: string; value: string }[] }
-> = ({ selectedNode, parentNode, onFinish, decideTargetOptions }) => {
+const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
-  /////////////////////////
-  const [paramValOptions, setParamValOptions] = useState<{ label: string; value: string }[]>([]);
-  const [relationOptons, setRelationOptons] = useState(relationOpts2);
-  // 0: 属于-字典 1: 属于-关键字 2: 匹配 3: 为空 4:等于/不等于
-  const [condition, setCondition] = useState<'in' | '!in' | 'like' | 'isnull' | 'eq'>('in');
+  const [resultOpts, serResultOpts] = useState<Option[]>([]);
+  const [relationOpts, setRelationOpts] = useState(relationOpts2);
+  const [categoryType, setCategoryType] = useState<CategoryType>('default');
+  const [relationType, setRelationType] = useState<RelationType>('in');
+  const [operationType, setOperationType] = useState<'dict' | 'word'>('dict');
   const [desc, setDesc] = useState('');
-  const [descParam, setDescParam] = useState<'desc' | 'word'>('desc');
-  const [checkParam, setCheckParam] = useState('specialBoilType');
-  const [is, setIs] = useState<'default' | 'age' | 'num'>('default');
+  const [isOpenTree, setIsOpenTree] = useState(false);
+  const [isOpenTable, setIsOpenTable] = useState(false);
+
+  const [selectedCategory, setSelectedCategory] = useState('specialBoilType');
 
   const [form] = Form.useForm();
+  const transferRef = useRef<any>(null);
 
-  const { data, isLoading, error } = useQuery(
+  const { isLoading, error } = useQuery(
     ['getCategorys'],
     () => getCategorys('ruleNodeCheckParam'),
     {
-      onSuccess(res) {
-        console.log(res, '*****');
+      onSuccess({ data }) {
+        const opts = data.data
+          .reduce(
+            (pre, cur) => (cur.children ? [...pre, ...cur.children] : [...pre, cur]),
+            [] as GetCategory[]
+          )
+          .map(({ label, value }) => ({ label, value }));
+
+        setCategoryOpts(opts);
       }
     }
   );
 
-  const map: Record<string, any> = {};
+  const { mutate } = useMutation(getCategorys, {
+    onSuccess({ data }) {
+      const opts = data.data.map(({ label, value }) => ({ label, value }));
+      serResultOpts(data.data);
+    }
+  });
+
+  const descMapping: Record<string, string> = {};
   [
     ...relationOpts2,
-    ...decideTargetOptions,
-    ...paramValOptions,
+    ...categoryOpts,
+    ...resultOpts,
     ...contrastOpts,
     ...timeOpts,
     ...logicOpts
-  ].forEach((item) => {
-    map[item.value] = item.label;
+  ].forEach(({ value, label }) => {
+    descMapping[value] = label;
   });
 
   useEffect(() => {
-    if (selectedNode?.data.jsonData) {
-      form.setFieldsValue(selectedNode?.data.jsonData);
-      setDescParam(selectedNode?.data.jsonData?.descParam || 'desc');
-      setDesc(selectedNode?.data.jsonData?.title);
+    const nodeData = selectedNode?.data;
+
+    if (nodeData?.jsonData) {
+      form.setFieldsValue(nodeData?.jsonData);
+      setOperationType(nodeData?.jsonData?.descParam);
+      setSelectedCategory(form.getFieldValue('checkParam'));
+      setDesc(nodeData.title);
+      onSwitchCategoryType(form.getFieldValue('checkParam'));
       mutate(form.getFieldValue('checkParam'));
-      setCheckParam(form.getFieldValue('checkParam'));
     } else {
-      form.resetFields();
+      setCategoryType('default');
       setDesc('');
+      form.resetFields();
     }
   }, [selectedNode?.id]);
 
-  const { mutate } = useMutation(getCategorys, {
-    onSuccess(res) {
-      setParamValOptions(res.data.data);
+  const onSwitchCategoryType = (val: string) => {
+    switch (val) {
+      case 'age':
+        return setCategoryType('age');
+      case 'perDose':
+        return setCategoryType('num');
+      default:
+        return setCategoryType('default');
     }
-  });
+  };
 
   const onValuesChange = (changedValues: any, values: any) => {
     if (changedValues.sourceResult) return;
 
     if (changedValues.checkParam) {
-      switch (changedValues.checkParam) {
-        case 'age':
-          return setIs('age');
-        case 'perDose':
-          return setIs('num');
+      const val = changedValues.checkParam;
+      const opts = ['specialBoilType', 'medicineName'].includes(val)
+        ? relationOpts2
+        : relationOpts1;
+      setRelationOpts(opts);
+      setRelationType('in');
+      setOperationType('dict');
+      setSelectedCategory(val);
+      setDesc('');
+      mutate(val);
+      onSwitchCategoryType(val);
+    }
 
-        default:
-          return setIs('default');
-      }
+    if (changedValues.descParam) {
+      setRelationType(changedValues.descParam === 'dict' ? 'in' : '!in');
+      setOperationType(changedValues.descParam);
+    }
+
+    if (changedValues.connSign) {
+      setRelationType(changedValues.connSign);
+      setOperationType('dict');
     }
 
     if (values.checkParam === 'age') return;
 
-    const paramVal = form.getFieldValue('paramVal');
-    const de1 = map[form.getFieldValue('checkParam')];
-    const de2 = map[form.getFieldValue('connSign')];
-    const de3 = (Array.isArray(paramVal) ? paramVal.map((i) => map[i]).join('，') : paramVal) || '';
-
-    setDesc(`${de1} ${de2} ${de3}`);
-
+    // 重置当前修改Form.Item后面的值
     const curKey = Object.keys(changedValues)[0];
     const keys = ['checkParam', 'connSign', 'descParam', 'paramVal'];
     const index = keys.findIndex((key) => key === curKey);
-    const needReset = keys.slice(index + 1);
-    form.resetFields(needReset);
-
-    if (changedValues.checkParam) {
-      setRelationOptons(
-        changedValues.checkParam === 'specialBoilType' ||
-          changedValues.checkParam === 'medicineName'
-          ? relationOpts2
-          : relationOpts1
-      );
-      setCondition('in');
-      setDescParam('desc');
-      setCheckParam(changedValues.checkParam);
-    }
-
-    if (changedValues.descParam) {
-      setCondition(changedValues.descParam === 'dict' ? 'in' : '!in');
-      setDescParam(changedValues.descParam);
-    }
-
-    if (changedValues.connSign) {
-      setCondition(changedValues.connSign);
-      setDescParam('desc');
-    }
+    form.resetFields(keys.slice(index + 1));
   };
 
   return (
     <div>
-      <div className='pb-2'>节点详情 {is}</div>
+      <Modal
+        forceRender
+        destroyOnClose
+        width={1000}
+        open={isOpenTree}
+        title='诊断名称选择'
+        onOk={() => {
+          form.setFieldValue('paramVal', transferRef.current?.onOk());
+          transferRef.current?.onClear();
+          setIsOpenTree(false);
+        }}
+        onCancel={() => {
+          setIsOpenTree(false);
+          transferRef.current?.onCancel();
+        }}
+      >
+        <div className='max-h-96 overflow-y-auto'>
+          <TransferTree
+            keys={form.getFieldValue('paramVal')}
+            ref={transferRef}
+            dataSource={resultOpts as TransferData[]}
+          />
+        </div>
+      </Modal>
+      <Modal
+        forceRender
+        destroyOnClose
+        width={1000}
+        open={isOpenTable}
+        title='药品选择'
+        onOk={() => {
+          setIsOpenTable(false);
+        }}
+        onCancel={() => {}}
+      >
+        <div className='max-h-96 overflow-y-auto'>
+          <TransferTable
+          // keys={form.getFieldValue('paramVal')}
+          // ref={transferRef}
+          // dataSource={resultOpts as TransferData[]}
+          />
+        </div>
+      </Modal>
+      <div className='pb-2'>节点详情</div>
       <Form
         clearOnDestroy
         form={form}
@@ -134,88 +190,104 @@ const Step2: React.FC<
           console.log(values);
           if (values.checkParam === 'age') {
             let title = '年龄';
-            values.ages.forEach((age) => {
-              title += ` ${map[age.connSign]} ${age.paramVal} ${map[age.specialParam]} ${age.checkSign === 'ignore' ? '' : map[age.checkSign]}`;
+            values.ages.forEach((age: any) => {
+              title += ` ${descMapping[age.connSign]} ${age.paramVal} ${descMapping[age.specialParam]} ${age.checkSign === 'ignore' ? '' : descMapping[age.checkSign]}`;
             });
-            onFinish({ step: 2, values: { ...values, title } });
-            return;
+            return onFinish({ step: 2, values, title });
           }
 
-          if (values.connSign !== 'isnull' && !values.paramVal) {
-            return message.error('请填写完整节点数据');
-          }
-
-          onFinish({ step: 2, values: { ...values, title: desc } });
+          const paramVal = form.getFieldValue('paramVal');
+          const desc1 = descMapping[form.getFieldValue('checkParam')];
+          const desc2 = descMapping[form.getFieldValue('connSign')];
+          const desc3 =
+            (Array.isArray(paramVal) ? paramVal.map((i) => descMapping[i]).join('，') : paramVal) ??
+            '';
+          const describe = `${desc1} ${desc2} ${desc3}`;
+          setDesc(describe);
+          onFinish({ step: 2, values, title: describe });
         }}
         onValuesChange={onValuesChange}
       >
-        {selectedNode?.data.type === 'node' && <ParentReslut title={parentNode?.data.title} />}
+        <Colation show={selectedNode.data.type === 'node'}>
+          <ParentReslut title={parentNode?.data.title} />
+        </Colation>
         <div className='text-sm mb-2'>节点设置</div>
-        <Form.Item name='checkParam' initialValue={'specialBoilType'}>
-          <Select placeholder='请选择' options={decideTargetOptions} />
+        <Form.Item name='checkParam' initialValue='specialBoilType'>
+          <Select options={categoryOpts} />
         </Form.Item>
-        {is === 'default' && (
-          <>
-            {checkParam !== 'toxicPieces' && (
-              <Row gutter={12}>
-                <Col span={12}>
-                  <Form.Item name='connSign' initialValue={'in'}>
-                    <Select placeholder='请选择' options={relationOptons} />
+        <Colation show={categoryType === 'default'}>
+          <Colation show={selectedCategory !== 'toxicPieces'}>
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item name='connSign' initialValue='in'>
+                  <Select placeholder='请选择' options={relationOpts} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Colation show={['in', '!in'].includes(relationType)}>
+                  <Form.Item name='descParam' initialValue='dict'>
+                    <Select
+                      placeholder='请选择'
+                      options={[
+                        { value: 'dict', label: '字典' },
+                        { value: 'word', label: '关键字' }
+                      ]}
+                    />
                   </Form.Item>
-                </Col>
-                <Col span={12}>
-                  {(condition === 'in' || condition === '!in') && (
-                    <Form.Item name='descParam' initialValue={'dict'}>
-                      <Select
-                        placeholder='请选择'
-                        options={[
-                          { value: 'dict', label: '字典' },
-                          { value: 'word', label: '关键字' }
-                        ]}
-                      />
-                    </Form.Item>
-                  )}
+                </Colation>
 
-                  {condition === 'like' && (
-                    <Form.Item name='paramVal'>
-                      <Input className='mb-2' placeholder='请输入' />
-                    </Form.Item>
-                  )}
+                <Colation show={relationType === 'like'}>
+                  <Form.Item name='paramVal'>
+                    <Input className='mb-2' placeholder='请输入' />
+                  </Form.Item>
+                </Colation>
 
-                  {condition === 'eq' && (
-                    <Form.Item name='paramVal'>
-                      <Select placeholder='请选择' options={decideTargetOptions} />
-                    </Form.Item>
-                  )}
-                </Col>
-              </Row>
-            )}
-            {(condition === 'in' || condition === '!in') && (
-              <Form.Item name='paramVal'>
-                {descParam === 'word' ? (
-                  <Input placeholder='请输入' />
-                ) : (
-                  <Select
-                    allowClear
-                    mode='multiple'
-                    placeholder='请选择'
-                    options={paramValOptions}
-                    onDropdownVisibleChange={(open) => {
-                      open === true && mutate(form.getFieldValue('checkParam'));
-                    }}
-                  />
-                )}
-              </Form.Item>
-            )}
-            <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2'>
-              <div className='font-semibold'>整体判断描述：</div>
-              {desc}
-            </div>
-          </>
-        )}
-        {is === 'num' && 'num'}
+                <Colation show={relationType === 'eq'}>
+                  <Form.Item name='paramVal'>
+                    <Select placeholder='请选择' options={categoryOpts} />
+                  </Form.Item>
+                </Colation>
+              </Col>
+            </Row>
+          </Colation>
+          <Colation show={['in', '!in'].includes(relationType)}>
+            <Form.Item
+              className={clsx(!['pathogen', 'medicineName'].includes(selectedCategory) && 'hidden')}
+            >
+              <Input
+                placeholder='请选择'
+                onChange={() => undefined}
+                onClick={() =>
+                  selectedCategory === 'pathogen' ? setIsOpenTree(true) : setIsOpenTable(true)
+                }
+                value={
+                  form.getFieldValue('paramVal')?.length
+                    ? `${descMapping.pathogen}已选${form.getFieldValue('paramVal')?.length}项`
+                    : ''
+                }
+              />
+            </Form.Item>
+            <Form.Item
+              name='paramVal'
+              className={clsx(['pathogen', 'medicineName'].includes(selectedCategory) && 'hidden')}
+            >
+              {/* <Colation show={operationType === 'word'}></Colation> */}
+              {operationType === 'word' ? (
+                <Input placeholder='请输入' />
+              ) : (
+                <Select allowClear mode='multiple' placeholder='请选择' options={resultOpts} />
+              )}
 
-        {is === 'age' && (
+              {/* <Colation show={operationType === 'dict'}></Colation> */}
+            </Form.Item>
+          </Colation>
+          <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2'>
+            <div className='font-semibold'>整体判断描述：</div>
+            {desc}
+          </div>
+        </Colation>
+        <Colation show={categoryType === 'num'}>number</Colation>
+        <Colation show={categoryType === 'age'}>
           <Form.List
             name='ages'
             initialValue={[
@@ -255,7 +327,7 @@ const Step2: React.FC<
               </>
             )}
           </Form.List>
-        )}
+        </Colation>
         <Form.Item>
           <Button type='primary' block htmlType='submit'>
             确认
@@ -284,5 +356,9 @@ const ParentReslut = ({ title }: { title: string }) => (
     <div className='text-sm text-gray-600 mb-2'>则进入下一步</div>
   </>
 );
+
+type ColationProps = { show: boolean; children: React.ReactNode };
+
+const Colation = ({ show, children }: ColationProps) => (show ? children : null);
 
 export default Step2;

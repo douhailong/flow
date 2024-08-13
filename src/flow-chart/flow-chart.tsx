@@ -47,7 +47,12 @@ function App() {
 
   const getTreeQuery = useQuery(
     ['getTreeQuery'],
-    () => getTreeData({ ruleId, ruleVersion, ruleType }),
+    () =>
+      getTreeData({
+        ruleId,
+        ruleVersion: sessionStorage.getItem('version')!,
+        ruleType: sessionStorage.getItem('ruleType')!
+      }),
     {
       onSuccess(res) {
         const data = res.data.data;
@@ -60,13 +65,19 @@ function App() {
   );
 
   const auditRuleMutation = useMutation(auditRuleDraft, {
-    onSuccess() {
+    onSuccess({ data }) {
+      const { ruleType, version } = data.data;
+      sessionStorage.setItem('ruleType', ruleType);
+      sessionStorage.setItem('version', version);
       getTreeQuery.refetch();
     }
   });
 
   const saveRuleMutation = useMutation(saveRuleDraft, {
-    onSuccess() {
+    onSuccess({ data }) {
+      const { ruleType, version } = data.data;
+      sessionStorage.setItem('ruleType', ruleType);
+      sessionStorage.setItem('version', version);
       getTreeQuery.refetch();
     }
   });
@@ -200,7 +211,7 @@ function App() {
                 ...node,
                 data: {
                   ...node.data,
-                  title: values.title,
+                  title,
                   logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                   sourceResult: values.sourceResult,
                   isWarnUse: values.isWarnUse,

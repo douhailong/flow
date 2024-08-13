@@ -24,7 +24,7 @@ export const ruleId = sessionStorage.getItem('ruleId')!;
 export const ruleName = sessionStorage.getItem('ruleName')!;
 export const ruleVersion = sessionStorage.getItem('version')!;
 export const ruleType = sessionStorage.getItem('ruleType')!;
-export const version = sessionStorage.getItem('version');
+// export const version = sessionStorage.getItem('version');
 export const auditTime = sessionStorage.getItem('auditTime');
 export const mode = sessionStorage.getItem('mode') as ModeType;
 

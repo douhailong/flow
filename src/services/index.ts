@@ -1,14 +1,16 @@
 import request from './request';
 
-export type DecideTargets = {
-  data: {
-    code: string;
-    value: string;
-    label: string;
-    seq: number;
-    desc: string;
-    children?: DecideTargets[];
-  }[];
+export type GetCategory = {
+  code: string;
+  value: string;
+  label: string;
+  seq: number;
+  desc: string;
+  children?: GetCategory[];
+};
+
+export type GetCategorys = {
+  data: GetCategory[];
 };
 
 export function getCategorys(
@@ -20,7 +22,7 @@ export function getCategorys(
     | 'pathogen'
     | 'toxicPieces'
 ) {
-  return request<DecideTargets>({
+  return request<GetCategorys>({
     method: 'post',
     url: `/recipehub/recipeRule/getLookUpTreeByCode?code=${code}`
   });
