@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Flex, Table, Transfer } from 'antd';
 import type { GetProp, TableColumnsType, TableProps, TransferProps } from 'antd';
+import type { Option } from './utils';
 
 type TransferItem = GetProp<TransferProps, 'dataSource'>[number];
 type TableRowSelection<T extends object> = TableProps<T>['rowSelection'];
@@ -9,7 +10,7 @@ interface DataType {
   key: string;
   title: string;
   description: string;
-  tag: string;
+  label: string;
 }
 
 interface TableTransferProps extends TransferProps<TransferItem> {
@@ -42,6 +43,7 @@ const TableTransfer: React.FC<TableTransferProps> = (props) => {
 
         return (
           <Table
+            rowKey={(row) => row.key}
             rowSelection={rowSelection}
             columns={columns}
             dataSource={filteredItems}
@@ -54,40 +56,48 @@ const TableTransfer: React.FC<TableTransferProps> = (props) => {
   );
 };
 
-const mockTags = ['cat', 'dog', 'bird'];
-
-const mockData = Array.from({ length: 20 }).map<DataType>((_, i) => ({
-  key: i.toString(),
-  title: `content${i + 1}`,
-  description: `description of content${i + 1}`,
-  tag: mockTags[i % 3]
-}));
-
 const columns: TableColumnsType<DataType> = [
   {
-    dataIndex: 'title',
-    title: 'Name'
+    dataIndex: 'label',
+    title: '药品名称',
+    key: 'value'
   },
   {
-    dataIndex: 'description',
-    title: 'Description'
+    dataIndex: 'title',
+    title: '药品编号',
+    key: 'value'
   }
 ];
 
 const filterOption = (input: string, item: DataType) =>
-  item.title?.includes(input) || item.tag?.includes(input);
+  item.title?.includes(input) || item.label?.includes(input);
 
-const App: React.FC = () => {
+export type TransferData = Option & { children: TransferData[] };
+
+type TransferTableProps = {
+  dataSource: TransferData[];
+  keys: TransferProps['targetKeys'];
+};
+
+const TransferTable = forwardRef(({ dataSource, keys }: TransferTableProps, ref) => {
   const [targetKeys, setTargetKeys] = useState<TransferProps['targetKeys']>([]);
+
+  useEffect(() => setTargetKeys(keys), [keys]);
 
   const onChange: TableTransferProps['onChange'] = (nextTargetKeys) => {
     setTargetKeys(nextTargetKeys);
   };
 
+  useImperativeHandle(ref, () => ({
+    onOk: () => targetKeys,
+    onCancel: () => setTargetKeys(keys),
+    onClear: () => setTargetKeys([])
+  }));
+
   return (
     <Flex align='start' gap='middle' vertical>
       <TableTransfer
-        dataSource={mockData}
+        dataSource={dataSource as any as DataType[]}
         targetKeys={targetKeys}
         showSearch
         showSelectAll={false}
@@ -98,6 +108,6 @@ const App: React.FC = () => {
       />
     </Flex>
   );
-};
+});
 
-export default App;
+export default TransferTable;

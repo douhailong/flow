@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, message } from 'antd';
 import clsx from 'clsx';
 import { type FlowViewNode, useFlowEditor } from '@ant-design/pro-flow';
 import type { NodeType } from '../../utils';
@@ -22,6 +22,7 @@ type HeaderBarProps = {
   onAddBranch: (type: NodeType) => void;
   onDelete: () => void;
   onCopy: () => void;
+  onSwitchToMutable: () => void;
   onSearch: (value: string, clear?: boolean) => void;
   onSubmit: (type: 'sava' | 'audit') => void;
   mode: string;
@@ -30,6 +31,7 @@ type HeaderBarProps = {
 const HeaderBar: React.FC<HeaderBarProps> = ({
   selectedNode,
   onAddBranch,
+  onSwitchToMutable,
   onDelete,
   onSearch,
   onCopy,
@@ -102,19 +104,43 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
               <span>警示</span>
             </button>
             <div className='w-16'></div>
-            <button className='text-xs flex flex-col items-center' onClick={onCopy}>
-              <img width={24} height={24} src={Copy} />
+            <button
+              disabled={selectedNode?.id === 'root'}
+              className='text-xs flex flex-col items-center'
+              onClick={onCopy}
+            >
+              <img
+                width={24}
+                height={24}
+                src={Copy}
+                className={clsx(selectedNode?.id === 'root' && 'opacity-30')}
+              />
               <span>复制</span>
             </button>
-            <button className='text-xs flex flex-col items-center'>
-              <img width={24} height={24} src={Paste} />
+            <button
+              className='text-xs flex flex-col items-center'
+              onClick={() => message.info('暂未开放')}
+              disabled={selectedNode?.data.type === 'tip'}
+            >
+              <img
+                width={24}
+                height={24}
+                src={Paste}
+                className={clsx(selectedNode?.data.type === 'tip' && 'opacity-30')}
+              />
               <span>粘贴</span>
             </button>
-            <button className='text-xs flex flex-col items-center' onClick={() => undo()}>
+            <button
+              className='text-xs flex flex-col items-center'
+              onClick={() => message.info('暂未开放')}
+            >
               <img width={24} height={24} src={Undo} />
               <span>撤销</span>
             </button>
-            <button className='text-xs flex flex-col items-center' onClick={() => redo()}>
+            <button
+              className='text-xs flex flex-col items-center'
+              onClick={() => message.info('暂未开放')}
+            >
               <img width={24} height={24} src={Redo} />
               <span>恢复</span>
             </button>
@@ -135,11 +161,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         </>
       ) : mode === 'check' ? (
         <div className='flex space-x-4'>
-          <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
+          <button
+            className='text-xs flex flex-col items-center'
+            onClick={() => onSwitchToMutable()}
+          >
             <img width={24} height={24} src={Edit} />
             <span>编辑规则</span>
           </button>
-          <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
+          <button
+            className='text-xs flex flex-col items-center'
+            onClick={() => message.info('暂未开放')}
+          >
             <img width={24} height={24} src={Running} />
             <span>运行中规则</span>
           </button>

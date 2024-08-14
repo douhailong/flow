@@ -86,7 +86,6 @@ export type TransferData = Option & { children: TransferData[] };
 
 type TransferTreeProps = {
   dataSource: TransferData[];
-  // onKeyChange: (vals: React.Key[]) => void;
   keys: TreeTransferProps['targetKeys'];
 };
 

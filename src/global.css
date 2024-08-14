@@ -65,7 +65,7 @@ button[disabled] {
 }
 
 .ant-xx .title span {
-  font-size: 13px !important;
+  /* font-size: 13px !important; */
   display: -webkit-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -80,16 +80,22 @@ button[disabled] {
 }
 
 .ant-xx .title > div :last-child {
-  border: 1px solid green;
+  border: 1px solid #1677ff;
   border-radius: 9999px;
   width: 14px;
   height: 14px;
   text-align: center;
   line-height: 14px;
   font-size: 10px;
-  color: green;
+  color: #1677ff;
+  top: 33px;
 }
 
 .ant-form-item {
   margin-bottom: 8px;
+}
+
+.ant-transfer-list {
+  height: 380px !important;
+  overflow-y: auto;
 }

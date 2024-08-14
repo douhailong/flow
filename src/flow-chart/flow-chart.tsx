@@ -7,6 +7,8 @@ import {
   useFlowViewer,
   FlowEditorProvider
 } from '@ant-design/pro-flow';
+import { message } from 'antd';
+import copyToClipboard from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import SiderBar from './components/sider-bar';
 import HeaderBar from './components/header-bar';
@@ -20,38 +22,80 @@ import {
   RootNode,
   ruleId,
   ruleName,
-  ruleVersion,
+  version,
   ruleType,
+  hasDraft,
+  auditTime,
   mode
 } from './utils';
 import type { OnFinishProps } from './components/sider-bar';
+import ConfirmModal from '@components/confirm-modal/confirm-modal';
 
-import { saveRuleDraft, auditRuleDraft, getTreeData } from '@services';
+import { saveRuleDraft, auditRuleDraft, getTreeData, judgeHasDraft } from '@services';
 import { useMutation, useQuery } from 'react-query';
 
 import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
 
 function App() {
+  const [copyNode, setCopyNode] = useState<FlowViewNode>();
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
   const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(ruleName));
   const [selectedId, setSelectedId] = useState<string>('root');
   const [show, setShow] = useState(true);
+  const [stores, setStores] = useState({
+    version,
+    ruleType,
+    ruleName,
+    auditTime,
+    hasDraft,
+    mode
+  });
+
+  useEffect(() => {
+    const { version, ruleType, ruleName, auditTime, mode, hasDraft } = stores;
+    sessionStorage.setItem('hasDraft', hasDraft);
+    sessionStorage.setItem('ruleName', ruleName);
+    sessionStorage.setItem('ruleType', ruleType);
+    sessionStorage.setItem('version', version);
+    sessionStorage.setItem('auditTime', auditTime);
+    sessionStorage.setItem('mode', mode);
+  }, [stores]);
 
   useEffect(() => {
     setShow(false);
-    setTimeout(() => setShow(true), 0);
-  }, [edges]);
+    setTimeout(() => setShow(true), 10);
+  }, [edges, nodes]);
+
+  // TODO 高亮启用的规则
+  useEffect(() => {
+    const warns = nodes
+      .filter(({ data }) => data.type === 'tip' && data.isWarnUse === 'T')
+      .map((node) => node.id);
+    const result = [];
+    for (let i = 0; i < edges.length; i++) {
+      const curEdge = edges[i];
+      curEdge.target;
+    }
+    // console.log(warns);
+  }, [edges, nodes]);
 
   const { selectNode, selectNodes } = useFlowViewer();
+
+  const judgeHasDraftMutation = useMutation(judgeHasDraft, {
+    onSuccess(res) {
+      setStores({ ...stores, mode: 'mutable', ruleType: '3' });
+      setTimeout(() => getTreeQuery.refetch(), 10);
+    }
+  });
 
   const getTreeQuery = useQuery(
     ['getTreeQuery'],
     () =>
       getTreeData({
         ruleId,
-        ruleVersion: sessionStorage.getItem('version')!,
-        ruleType: sessionStorage.getItem('ruleType')!
+        ruleVersion: stores.version,
+        ruleType: stores.ruleType
       }),
     {
       onSuccess(res) {
@@ -67,18 +111,26 @@ function App() {
   const auditRuleMutation = useMutation(auditRuleDraft, {
     onSuccess({ data }) {
       const { ruleType, version } = data.data;
-      sessionStorage.setItem('ruleType', ruleType);
-      sessionStorage.setItem('version', version);
-      getTreeQuery.refetch();
+      setStores({
+        ...stores,
+        ruleType,
+        version,
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
+      });
+      setTimeout(() => getTreeQuery.refetch(), 10);
     }
   });
 
   const saveRuleMutation = useMutation(saveRuleDraft, {
     onSuccess({ data }) {
       const { ruleType, version } = data.data;
-      sessionStorage.setItem('ruleType', ruleType);
-      sessionStorage.setItem('version', version);
-      getTreeQuery.refetch();
+      setStores({
+        ...stores,
+        ruleType,
+        version,
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
+      });
+      setTimeout(() => getTreeQuery.refetch(), 10);
     }
   });
 
@@ -137,7 +189,7 @@ function App() {
     }
     selectNodes(
       nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
-      SelectType.SELECT
+      SelectType.DANGER
     );
     selectNodes(
       nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
@@ -147,14 +199,33 @@ function App() {
 
   // TODO
   const onCopy = () => {
-    console.log(nodes);
+    const copyNode = copyToClipboard(JSON.stringify(selectedNode));
+
+    console.log(copyNode);
+    console.log(selectedNode);
+    message.info('暂未开放');
+  };
+
+  const onSwitchToMutable = () => {
+    if (stores.hasDraft === 'true') {
+      ConfirmModal({
+        title: '编辑提示',
+        content: '已有规则草稿，是否前往编辑？',
+        onOk: () => {
+          setStores({ ...stores, mode: 'mutable', ruleType: '3' });
+          setTimeout(() => getTreeQuery.refetch(), 10);
+        }
+      });
+    } else {
+      judgeHasDraftMutation.mutate(ruleId);
+    }
   };
 
   const onSubmit = (type: SubmitType) => {
     const payload = {
       ruleId,
       ruleNum,
-      ruleName,
+      ruleName: stores.ruleName,
       ruleBranchNum: branchNum,
       ruleNodeNum: nodeNum,
       ruleRelate: edges,
@@ -184,6 +255,21 @@ function App() {
     }
 
     if (step === 2) {
+      function transferJsonData() {
+        // if (values.ages && Array.isArray(values.ages)) {
+        //   return values.ages.map((age: any) => ({
+        //     ...age,
+        //     checkParam: values.checkParam,
+        //     descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
+        //   }));
+        // }
+
+        return {
+          ...values,
+          descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
+        };
+      }
+
       setNodes(
         nodes.map((node) => {
           return node.id === selectedId
@@ -195,7 +281,7 @@ function App() {
                   title,
                   sourceResult: values.sourceResult,
                   logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-                  jsonData: values
+                  jsonData: transferJsonData()
                 }
               }
             : node;
@@ -216,12 +302,17 @@ function App() {
                   sourceResult: values.sourceResult,
                   isWarnUse: values.isWarnUse,
                   warnContent: values,
+                  warnLevel: values.warnLevel,
                   titleSlot: {
                     type: 'right',
                     value: values.warnLevel === 3 ? '✘' : '✔'
                   }
                 },
-                style: { background: levelColors[values.warnLevel] }
+                style: {
+                  background:
+                    // @ts-ignore
+                    values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
+                }
               }
             : node;
         })
@@ -233,12 +324,13 @@ function App() {
     <div className='h-full'>
       <HeaderBar
         selectedNode={selectedNode}
+        onSwitchToMutable={onSwitchToMutable}
         onAddBranch={onAddBranch}
         onDelete={onDelete}
         onSearch={onSearch}
         onCopy={onCopy}
         onSubmit={onSubmit}
-        mode={mode}
+        mode={stores.mode}
       />
       <div className='flex h-[calc(100vh-6rem)]'>
         <div className='flex-1'>
@@ -249,22 +341,31 @@ function App() {
               edges={edges}
               miniMap={false}
               onNodeClick={(e, node) => {
-                setSelectedId((pre) => {
-                  selectNode(pre, SelectType.DEFAULT);
-                  selectNode(node.id, SelectType.SELECT);
-                  return node.id;
-                });
+                stores.mode === 'mutable' &&
+                  setSelectedId((pre) => {
+                    selectNode(pre, SelectType.DEFAULT);
+                    selectNode(node.id, SelectType.SELECT);
+                    return node.id;
+                  });
               }}
             />
           )}
         </div>
-        {mode === 'mutable' && (
+        {stores.mode === 'mutable' && (
           <div className='w-72 p-2 overflow-y-auto relative'>
+            {/* @ts-ignore */}
             <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
           </div>
         )}
       </div>
-      <Footer nodeNum={nodeNum} ruleNum={ruleNum} branchNum={branchNum} />
+      <Footer
+        nodeNum={nodeNum}
+        ruleNum={ruleNum}
+        branchNum={branchNum}
+        version={stores.version}
+        date={stores.auditTime}
+        ruleName={stores.ruleName}
+      />
     </div>
   );
 }

@@ -65,3 +65,26 @@ export function getTreeData(data: GetTreeDataProps) {
     data
   });
 }
+
+type GetDrugs = {
+  data: {
+    id: string;
+    medicineName: string;
+    medicineCode: string;
+  }[];
+};
+
+export function getDrugs() {
+  return request<GetDrugs>({
+    method: 'post',
+    url: '/recipehub/medicine/listMedicine',
+    data: { useState: 0 }
+  });
+}
+
+export function judgeHasDraft(ruleId: string) {
+  return request<any>({
+    method: 'post',
+    url: `/recipehub/recipeRule/auditOrAddDraft?ruleId=${ruleId}`
+  });
+}

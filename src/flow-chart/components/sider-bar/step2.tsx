@@ -18,7 +18,7 @@ import {
   timeOpts,
   logicOpts
 } from './utils';
-import { getCategorys, type GetCategory } from '@services';
+import { getCategorys, getDrugs, type GetCategory } from '@services';
 import clsx from 'clsx';
 
 const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
@@ -35,7 +35,8 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
   const [selectedCategory, setSelectedCategory] = useState('specialBoilType');
 
   const [form] = Form.useForm();
-  const transferRef = useRef<any>(null);
+  const transferTreeRef = useRef<any>(null);
+  const transferTableRef = useRef<any>(null);
 
   const { isLoading, error } = useQuery(
     ['getCategorys'],
@@ -56,8 +57,20 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
 
   const { mutate } = useMutation(getCategorys, {
     onSuccess({ data }) {
-      const opts = data.data.map(({ label, value }) => ({ label, value }));
       serResultOpts(data.data);
+    }
+  });
+
+  const getDrugMutation = useMutation(getDrugs, {
+    onSuccess({ data }) {
+      // TODO
+      const opts = data.data.map(({ id, medicineName, medicineCode }) => ({
+        label: medicineName,
+        value: id,
+        title: medicineCode,
+        key: id
+      }));
+      serResultOpts(opts);
     }
   });
 
@@ -78,16 +91,19 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
 
     if (nodeData?.jsonData) {
       form.setFieldsValue(nodeData?.jsonData);
+      const val = form.getFieldValue('checkParam');
       setOperationType(nodeData?.jsonData?.descParam);
-      setSelectedCategory(form.getFieldValue('checkParam'));
       setDesc(nodeData.title);
-      onSwitchCategoryType(form.getFieldValue('checkParam'));
-      mutate(form.getFieldValue('checkParam'));
+      onSwitchCategoryType(val);
+      setSelectedCategory(val);
+      setRelationType(form.getFieldValue('connSign'));
+      val === 'medicineName' ? getDrugMutation.mutate() : mutate(val);
     } else {
-      setCategoryType('default');
       setDesc('');
+      mutate('specialBoilType');
       form.resetFields();
     }
+    onSwitchCategoryType(form.getFieldValue('checkParam'));
   }, [selectedNode?.id]);
 
   const onSwitchCategoryType = (val: string) => {
@@ -114,7 +130,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       setOperationType('dict');
       setSelectedCategory(val);
       setDesc('');
-      mutate(val);
+      val === 'medicineName' ? getDrugMutation.mutate() : mutate(val);
       onSwitchCategoryType(val);
     }
 
@@ -124,6 +140,8 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
     }
 
     if (changedValues.connSign) {
+      console.log(changedValues.connSign, 'changedValues.descParam');
+
       setRelationType(changedValues.connSign);
       setOperationType('dict');
     }
@@ -140,54 +158,67 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
   return (
     <div>
       <Modal
-        forceRender
+        maskClosable={false}
         destroyOnClose
         width={1000}
         open={isOpenTree}
         title='诊断名称选择'
         onOk={() => {
-          form.setFieldValue('paramVal', transferRef.current?.onOk());
-          transferRef.current?.onClear();
+          form.setFieldValue('paramVal', transferTreeRef.current?.onOk());
+          transferTreeRef.current?.onClear();
           setIsOpenTree(false);
         }}
         onCancel={() => {
           setIsOpenTree(false);
-          transferRef.current?.onCancel();
+          transferTreeRef.current?.onCancel();
         }}
       >
-        <div className='max-h-96 overflow-y-auto'>
-          <TransferTree
-            keys={form.getFieldValue('paramVal')}
-            ref={transferRef}
-            dataSource={resultOpts as TransferData[]}
-          />
-        </div>
+        {/* <div className='max-h-96 overflow-y-auto'> */}
+        <TransferTree
+          keys={form.getFieldValue('paramVal')}
+          ref={transferTreeRef}
+          dataSource={resultOpts as TransferData[]}
+        />
+        {/* </div> */}
       </Modal>
       <Modal
-        forceRender
+        maskClosable={false}
         destroyOnClose
         width={1000}
         open={isOpenTable}
         title='药品选择'
         onOk={() => {
+          form.setFieldValue('paramVal', transferTableRef.current?.onOk());
+          transferTableRef.current?.onClear();
           setIsOpenTable(false);
         }}
-        onCancel={() => {}}
+        onCancel={() => {
+          setIsOpenTable(false);
+          transferTableRef.current?.onCancel();
+        }}
       >
-        <div className='max-h-96 overflow-y-auto'>
-          <TransferTable
-          // keys={form.getFieldValue('paramVal')}
-          // ref={transferRef}
-          // dataSource={resultOpts as TransferData[]}
-          />
-        </div>
+        {/* <div className='max-h-96 overflow-y-auto'> */}
+        <TransferTable
+          ref={transferTableRef}
+          keys={form.getFieldValue('paramVal')}
+          dataSource={resultOpts as TransferData[]}
+        />
+        {/* </div> */}
       </Modal>
       <div className='pb-2'>节点详情</div>
       <Form
         clearOnDestroy
         form={form}
         onFinish={(values) => {
-          console.log(values);
+          // if (
+          //   values.connSign !== 'isnull' &&
+          //   !values.paramVal &&
+          //   values.checkParam !== 'age' &&
+          //   values.checkParam !== 'perDose'
+          // ) {
+          //   return message.error('请填写完整节点数据');
+          // }
+
           if (values.checkParam === 'age') {
             let title = '年龄';
             values.ages.forEach((age: any) => {
@@ -204,6 +235,27 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             '';
           const describe = `${desc1} ${desc2} ${desc3}`;
           setDesc(describe);
+
+          // if (selectedCategory === 'pathogen') {
+          //   const transferResultOpts = (opts: any) => {
+          //     const result = [];
+          //     for (let i = 0; i < opts.length; i++) {
+          //       const curOp = opts[i];
+
+          //       if (curOp.children) {
+          //         const { children, ...restCurOp } = curOp;
+          //         result.push(transferResultOpts(children));
+          //       } else {
+          //         result.push(curOp);
+          //       }
+          //     }
+          //     return result;
+          //   };
+          //   console.log('******', transferResultOpts(resultOpts));
+          //   console.log('******', resultOpts);
+
+          //   onFinish({ step: 2, values: { ...values }, title: describe });
+          // }
           onFinish({ step: 2, values, title: describe });
         }}
         onValuesChange={onValuesChange}
@@ -252,7 +304,11 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           </Colation>
           <Colation show={['in', '!in'].includes(relationType)}>
             <Form.Item
-              className={clsx(!['pathogen', 'medicineName'].includes(selectedCategory) && 'hidden')}
+              className={clsx(
+                (operationType === 'word' ||
+                  !['pathogen', 'medicineName'].includes(selectedCategory)) &&
+                  'hidden'
+              )}
             >
               <Input
                 placeholder='请选择'
@@ -269,16 +325,17 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             </Form.Item>
             <Form.Item
               name='paramVal'
-              className={clsx(['pathogen', 'medicineName'].includes(selectedCategory) && 'hidden')}
+              className={clsx(
+                ['pathogen', 'medicineName'].includes(selectedCategory) &&
+                  operationType !== 'word' &&
+                  'hidden'
+              )}
             >
-              {/* <Colation show={operationType === 'word'}></Colation> */}
               {operationType === 'word' ? (
                 <Input placeholder='请输入' />
               ) : (
                 <Select allowClear mode='multiple' placeholder='请选择' options={resultOpts} />
               )}
-
-              {/* <Colation show={operationType === 'dict'}></Colation> */}
             </Form.Item>
           </Colation>
           <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2'>
@@ -286,7 +343,71 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             {desc}
           </div>
         </Colation>
-        <Colation show={categoryType === 'num'}>number</Colation>
+        <Colation show={categoryType === 'num'}>
+          <Form.List
+            name='nums'
+            initialValue={[
+              {
+                connSign: 'gt',
+                specialParam: 'g',
+                checkSign: 'ignore'
+              }
+            ]}
+          >
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ name, key, ...restField }, index) => (
+                  <Row gutter={12} key={key}>
+                    <Col span={9}>
+                      <Form.Item {...restField} name={[name, 'connSign']} initialValue='gt'>
+                        <Select options={contrastOpts} />
+                      </Form.Item>
+                    </Col>
+                    <Col span={15}>
+                      <Form.Item {...restField} name={[name, 'descParam']} initialValue='num'>
+                        <Select
+                          options={[
+                            { label: '数值', value: 'num' },
+                            {
+                              label: '常规剂量每次上限',
+                              value: 'ceil'
+                            }
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <>
+                      <Col span={15}>
+                        <Form.Item {...restField} name={[name, 'paramVal']}>
+                          <Input placeholder='请输入' />
+                        </Form.Item>
+                      </Col>
+                      <Col span={9}>
+                        <Form.Item {...restField} name={[name, 'specialParam']} initialValue='g'>
+                          <Select
+                            options={[
+                              { label: 'g', value: 1 },
+                              {
+                                label: 'kg',
+                                value: 2
+                              }
+                            ]}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </>
+                    <Col span={24}>
+                      {operationType}
+                      <Form.Item {...restField} name={[name, 'checkSign']} initialValue='ignore'>
+                        <Select options={logicOpts} onChange={(val) => val !== 'ignore' && add()} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                ))}
+              </>
+            )}
+          </Form.List>
+        </Colation>
         <Colation show={categoryType === 'age'}>
           <Form.List
             name='ages'
