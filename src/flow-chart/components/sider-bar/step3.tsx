@@ -12,8 +12,8 @@ const levelOptons = [
 const arr = ['1级', '2级', '3级'];
 
 const options = [
-  { value: 'name', label: '药品·名称' },
-  { value: 'minDose', label: '最小可分剂量' }
+  { value: 'name', label: '药品·名称' }
+  // { value: 'minDose', label: '最小可分剂量' }
 ];
 
 const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
@@ -29,7 +29,7 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
     <div>
       <div className='pb-2'>判断详情</div>
       <div className='text-sm mb-2'>判断符</div>
-      <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2 text-sm'>
+      <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2 text-sm break-words'>
         {parentNode?.data.title}
       </div>
       <div className='text-sm text-gray-600 mb-2'>若上述逻辑条件</div>

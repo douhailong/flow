@@ -22,7 +22,9 @@ type HeaderBarProps = {
   onAddBranch: (type: NodeType) => void;
   onDelete: () => void;
   onCopy: () => void;
+  onPaste: () => void;
   onSwitchToMutable: () => void;
+  onLookRunningRule: (val?: string) => void;
   onSearch: (value: string, clear?: boolean) => void;
   onSubmit: (type: 'sava' | 'audit') => void;
   mode: string;
@@ -31,10 +33,12 @@ type HeaderBarProps = {
 const HeaderBar: React.FC<HeaderBarProps> = ({
   selectedNode,
   onAddBranch,
+  onLookRunningRule,
   onSwitchToMutable,
   onDelete,
   onSearch,
   onCopy,
+  onPaste,
   onSubmit,
   mode
 }) => {
@@ -119,7 +123,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
             <button
               className='text-xs flex flex-col items-center'
-              onClick={() => message.info('暂未开放')}
+              onClick={() => onPaste()}
               disabled={selectedNode?.data.type === 'tip'}
             >
               <img
@@ -170,7 +174,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           </button>
           <button
             className='text-xs flex flex-col items-center'
-            onClick={() => message.info('暂未开放')}
+            onClick={() => onLookRunningRule()}
           >
             <img width={24} height={24} src={Running} />
             <span>运行中规则</span>

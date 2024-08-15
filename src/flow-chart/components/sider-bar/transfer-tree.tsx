@@ -64,7 +64,6 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
                 blockNode
                 checkable
                 checkStrictly
-                defaultExpandAll
                 checkedKeys={checkedKeys}
                 treeData={generateTree(dataSource, targetKeys)}
                 onCheck={(_, { node: { key } }) => {

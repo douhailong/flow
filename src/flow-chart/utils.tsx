@@ -28,6 +28,7 @@ export const ruleType = sessionStorage.getItem('ruleType')!;
 export const hasDraft = sessionStorage.getItem('hasDraft')!;
 export const version = sessionStorage.getItem('version')!;
 export const auditTime = sessionStorage.getItem('auditTime')!;
+export const nodeId = sessionStorage.getItem('nodeId')!;
 export const mode = sessionStorage.getItem('mode') as ModeType;
 
 export function RootNode(title: string): FlowViewNode[] {

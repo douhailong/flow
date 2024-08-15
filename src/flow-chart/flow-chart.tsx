@@ -7,9 +7,9 @@ import {
   useFlowViewer,
   FlowEditorProvider
 } from '@ant-design/pro-flow';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
 import copyToClipboard from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import SiderBar from './components/sider-bar';
 import HeaderBar from './components/header-bar';
 import Footer from './components/footer';
@@ -26,7 +26,8 @@ import {
   ruleType,
   hasDraft,
   auditTime,
-  mode
+  mode,
+  nodeId
 } from './utils';
 import type { OnFinishProps } from './components/sider-bar';
 import ConfirmModal from '@components/confirm-modal/confirm-modal';
@@ -38,10 +39,11 @@ import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
 
 function App() {
-  const [copyNode, setCopyNode] = useState<FlowViewNode>();
+  const [copyNode, setCopyNode] = useState<FlowViewNode[]>([]);
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
   const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(ruleName));
   const [selectedId, setSelectedId] = useState<string>('root');
+  const [changedIds, setChangedIds] = useState<string[]>([]);
   const [show, setShow] = useState(true);
   const [stores, setStores] = useState({
     version,
@@ -49,36 +51,31 @@ function App() {
     ruleName,
     auditTime,
     hasDraft,
-    mode
+    mode,
+    nodeId
   });
 
   useEffect(() => {
-    const { version, ruleType, ruleName, auditTime, mode, hasDraft } = stores;
+    const { version, ruleType, ruleName, auditTime, mode, hasDraft, nodeId } = stores;
     sessionStorage.setItem('hasDraft', hasDraft);
     sessionStorage.setItem('ruleName', ruleName);
     sessionStorage.setItem('ruleType', ruleType);
     sessionStorage.setItem('version', version);
     sessionStorage.setItem('auditTime', auditTime);
     sessionStorage.setItem('mode', mode);
+
+    // () => sessionStorage.clear();
   }, [stores]);
 
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 10);
+    if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
   }, [edges, nodes]);
 
-  // TODO 高亮启用的规则
   useEffect(() => {
-    const warns = nodes
-      .filter(({ data }) => data.type === 'tip' && data.isWarnUse === 'T')
-      .map((node) => node.id);
-    const result = [];
-    for (let i = 0; i < edges.length; i++) {
-      const curEdge = edges[i];
-      curEdge.target;
-    }
-    // console.log(warns);
-  }, [edges, nodes]);
+    setTimeout(() => selectNodes(changedIds, SelectType.DANGER), 100);
+  }, [changedIds]);
 
   const { selectNode, selectNodes } = useFlowViewer();
 
@@ -110,11 +107,12 @@ function App() {
 
   const auditRuleMutation = useMutation(auditRuleDraft, {
     onSuccess({ data }) {
+      message.success('审核成功');
       const { ruleType, version } = data.data;
       setStores({
         ...stores,
         ruleType,
-        version,
+        version: version[0] === 'V' ? version : stores.version,
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
       });
       setTimeout(() => getTreeQuery.refetch(), 10);
@@ -124,10 +122,11 @@ function App() {
   const saveRuleMutation = useMutation(saveRuleDraft, {
     onSuccess({ data }) {
       const { ruleType, version } = data.data;
+      message.success('保存成功');
       setStores({
         ...stores,
         ruleType,
-        version,
+        version: version[0] === 'V' ? version : stores.version,
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
       });
       setTimeout(() => getTreeQuery.refetch(), 10);
@@ -199,11 +198,10 @@ function App() {
 
   // TODO
   const onCopy = () => {
-    const copyNode = copyToClipboard(JSON.stringify(selectedNode));
-
-    console.log(copyNode);
-    console.log(selectedNode);
-    message.info('暂未开放');
+    const nds = nodes.filter((node) => node.id.includes(selectedId));
+    setCopyNode(nds);
+    message.success('复制成功');
+    // const copyNode = copyToClipboard(JSON.stringify(selectedNode));
   };
 
   const onSwitchToMutable = () => {
@@ -221,7 +219,62 @@ function App() {
     }
   };
 
+  const onPaste = () => {
+    message.info('暂未开放');
+    console.log(copyNode, selectedNode);
+
+    if (!copyNode.length) return message.error('请先复制节点');
+    const firstNodeType = copyNode[0].data.type;
+
+    if (firstNodeType !== 'branch' && selectedNode?.data.type === 'root')
+      return message.error('根节点下只可以粘贴分支');
+
+    if (firstNodeType !== 'pureNode' && selectedNode?.data.type === 'branch')
+      return message.error('分支下只可以粘贴无判断节点');
+
+    if (firstNodeType !== 'tip' && selectedNode?.data.type === 'node')
+      return message.error('判断节点下只能粘贴警示');
+
+    if (
+      (firstNodeType !== 'node' || firstNodeType !== 'tip') &&
+      selectedNode?.data.type === 'pureNode'
+    )
+      return message.error('分支下只可以粘贴判断节点和警示');
+  };
+
+  const onLookRunningRule = (warn?: string) => {
+    const warns = warn
+      ? [warn]
+      : nodes
+          .filter(({ data }) => data.type === 'tip' && data.isWarnUse === 'T')
+          .map((node) => node.id);
+
+    const result: string[] = [];
+    for (let i = 0; i < nodes.length; i++) {
+      const curNode = nodes[i];
+      for (let k = 0; k < warns.length; k++) {
+        const curWarns = warns[k];
+        if (
+          curWarns.includes(curNode.id) &&
+          !result.includes(curNode.id) &&
+          curNode.id !== 'root' &&
+          curNode.data.isWarnUse !== 'F'
+        )
+          result.push(curNode.id);
+      }
+    }
+    setChangedIds(result);
+  };
+
   const onSubmit = (type: SubmitType) => {
+    const nds = nodes.filter((node) => node.data.title === '请设置内容');
+    if (nds.length)
+      return ConfirmModal({
+        title: '提示',
+        content: '操作失败，请填写完整节点数据',
+        cancelButtonProps: { style: { display: 'none' } }
+      });
+
     const payload = {
       ruleId,
       ruleNum,
@@ -239,13 +292,48 @@ function App() {
       }))
     };
 
-    type === 'audit' && auditRuleMutation.mutate(payload);
+    const jsonNodes = JSON.stringify(nodes);
+    // 接口返回的JSON数据格式和JSON.stringify的不一样
+    const jsonData = JSON.stringify(
+      JSON.parse(getTreeQuery.data?.data?.data?.ruleDataJson ?? '{}')
+    );
+
+    if (jsonData === jsonNodes) {
+      if (type === 'sava')
+        return ConfirmModal({
+          title: '保存提示',
+          content: '当前规则未做任何修改，保存失败',
+          cancelButtonProps: { style: { display: 'none' } }
+        });
+
+      if (type === 'audit')
+        return ConfirmModal({
+          title: '审核提示',
+          content: '当前规则未做任何修改，审核失败',
+          cancelButtonProps: { style: { display: 'none' } }
+        });
+    }
     type === 'sava' && saveRuleMutation.mutate(payload);
+
+    const edgs = edges.map((edg) => edg.source);
+    const ndss = nodes.filter((node) => !edgs.includes(node.id) && node.data.type !== 'tip');
+
+    if (type === 'audit' && ndss.length)
+      return ConfirmModal({
+        title: '审核提示',
+        content: '审核失败，规则不完整，请进行查验',
+        cancelButtonProps: { style: { display: 'none' } }
+      });
+
+    type === 'audit' &&
+      ConfirmModal({
+        title: '审核提示',
+        content: '将审核当下修改，通过所有未审核规则',
+        onOk: () => auditRuleMutation.mutate(payload)
+      });
   };
 
   const onFinish = ({ step, values, title }: OnFinishProps) => {
-    console.log(values, title, 'onfinished');
-
     if (step === 1) {
       setNodes(
         nodes.map((node) => {
@@ -255,19 +343,20 @@ function App() {
     }
 
     if (step === 2) {
-      function transferJsonData() {
-        // if (values.ages && Array.isArray(values.ages)) {
-        //   return values.ages.map((age: any) => ({
-        //     ...age,
-        //     checkParam: values.checkParam,
-        //     descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
-        //   }));
-        // }
+      function specialJsonData() {
+        console.log(values, '-------------------');
 
-        return {
-          ...values,
-          descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
-        };
+        if (values.ages) {
+          const { ages, checkParam, paramVal } = values;
+          return ages.map((age: any) => {
+            return {
+              ...age,
+              checkParam,
+              checkSign: age.checkSign === 'ignore' ? undefined : age.checkSign,
+              descParam: Array.isArray(paramVal) ? 'dict' : 'word'
+            };
+          });
+        }
       }
 
       setNodes(
@@ -281,7 +370,13 @@ function App() {
                   title,
                   sourceResult: values.sourceResult,
                   logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-                  jsonData: transferJsonData()
+                  jsonData: {
+                    ...values,
+                    descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
+                  },
+                  checkParam: values.checkParam,
+                  descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
+                  specialJsonData: specialJsonData()
                 }
               }
             : node;
@@ -305,7 +400,7 @@ function App() {
                   warnLevel: values.warnLevel,
                   titleSlot: {
                     type: 'right',
-                    value: values.warnLevel === 3 ? '✘' : '✔'
+                    value: values.isWarnUse === 'F' ? '✘' : '✔'
                   }
                 },
                 style: {
@@ -322,50 +417,54 @@ function App() {
 
   return (
     <div className='h-full'>
-      <HeaderBar
-        selectedNode={selectedNode}
-        onSwitchToMutable={onSwitchToMutable}
-        onAddBranch={onAddBranch}
-        onDelete={onDelete}
-        onSearch={onSearch}
-        onCopy={onCopy}
-        onSubmit={onSubmit}
-        mode={stores.mode}
-      />
-      <div className='flex h-[calc(100vh-6rem)]'>
-        <div className='flex-1'>
-          {/* [React Flow]: Couldn't create edge for source handle id: "undefined", edge id: root&1. Help: https://reactflow.dev/error#008 setEdges 会出现这个问题 */}
-          {show && (
-            <FlowView
-              nodes={nodes}
-              edges={edges}
-              miniMap={false}
-              onNodeClick={(e, node) => {
-                stores.mode === 'mutable' &&
-                  setSelectedId((pre) => {
-                    selectNode(pre, SelectType.DEFAULT);
-                    selectNode(node.id, SelectType.SELECT);
-                    return node.id;
-                  });
-              }}
-            />
+      <Spin tip='加载中...' spinning={getTreeQuery.isFetching}>
+        <HeaderBar
+          selectedNode={selectedNode}
+          onSwitchToMutable={onSwitchToMutable}
+          onLookRunningRule={onLookRunningRule}
+          onPaste={onPaste}
+          onAddBranch={onAddBranch}
+          onDelete={onDelete}
+          onSearch={onSearch}
+          onCopy={onCopy}
+          onSubmit={onSubmit}
+          mode={stores.mode}
+        />
+        <div className='flex h-[calc(100vh-6rem)]'>
+          <div className='flex-1'>
+            {/* [React Flow]: Couldn't create edge for source handle id: "undefined", edge id: root&1. Help: https://reactflow.dev/error#008 setEdges 会出现这个问题 */}
+            {show && (
+              <FlowView
+                nodes={nodes}
+                edges={edges}
+                onNodeClick={(e, node) => {
+                  stores.mode === 'mutable' &&
+                    setSelectedId((pre) => {
+                      selectNode(pre, SelectType.DEFAULT);
+                      selectNode(node.id, SelectType.SELECT);
+                      return node.id;
+                    });
+                }}
+              />
+            )}
+          </div>
+          {stores.mode === 'mutable' && (
+            <div className='w-72 p-2 overflow-y-auto relative'>
+              {/* @ts-ignore */}
+              <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
+            </div>
           )}
         </div>
-        {stores.mode === 'mutable' && (
-          <div className='w-72 p-2 overflow-y-auto relative'>
-            {/* @ts-ignore */}
-            <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
-          </div>
-        )}
-      </div>
-      <Footer
-        nodeNum={nodeNum}
-        ruleNum={ruleNum}
-        branchNum={branchNum}
-        version={stores.version}
-        date={stores.auditTime}
-        ruleName={stores.ruleName}
-      />
+
+        <Footer
+          nodeNum={nodeNum}
+          ruleNum={ruleNum}
+          branchNum={branchNum}
+          version={stores.version}
+          date={stores.auditTime}
+          ruleName={stores.ruleName}
+        />
+      </Spin>
     </div>
   );
 }
