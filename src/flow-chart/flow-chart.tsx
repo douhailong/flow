@@ -32,7 +32,14 @@ import {
 import type { OnFinishProps } from './components/sider-bar';
 import ConfirmModal from '@components/confirm-modal/confirm-modal';
 
-import { saveRuleDraft, auditRuleDraft, getTreeData, judgeHasDraft } from '@services';
+import {
+  saveRuleDraft,
+  auditRuleDraft,
+  getTreeData,
+  judgeHasDraft,
+  judgeHasPermission,
+  isCanOperation
+} from '@services';
 import { useMutation, useQuery } from 'react-query';
 
 import No from '@assets/no.png';
@@ -196,15 +203,17 @@ function App() {
     );
   };
 
-  // TODO
   const onCopy = () => {
     const nds = nodes.filter((node) => node.id.includes(selectedId));
     setCopyNode(nds);
     message.success('复制成功');
-    // const copyNode = copyToClipboard(JSON.stringify(selectedNode));
   };
 
-  const onSwitchToMutable = () => {
+  const onSwitchToMutable = async () => {
+    const { data } = await judgeHasPermission(ruleId);
+
+    if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
+
     if (stores.hasDraft === 'true') {
       ConfirmModal({
         title: '编辑提示',
@@ -219,10 +228,8 @@ function App() {
     }
   };
 
+  // TODO
   const onPaste = () => {
-    message.info('暂未开放');
-    console.log(copyNode, selectedNode);
-
     if (!copyNode.length) return message.error('请先复制节点');
     const firstNodeType = copyNode[0].data.type;
 
@@ -240,6 +247,24 @@ function App() {
       selectedNode?.data.type === 'pureNode'
     )
       return message.error('分支下只可以粘贴判断节点和警示');
+
+    const edgs = edges
+      .filter((edge) => edge.source === selectedId)
+      .map((edge) => Number(edge.id.replace(selectedId + '&', '')));
+    const lastNum = Math.max(...edgs);
+    const firstId = copyNode[0]?.id;
+    const firstPasteId = `${selectedId}&${lastNum + 1}`;
+    const newNds = copyNode.map((node) => ({
+      ...node,
+      id: node.id.replace(firstId, firstPasteId)
+    }));
+    const newEdgs = newNds.map((node) => ({
+      source: node.id.split('&').slice(0, -1).join('&'),
+      target: node.id,
+      id: node.id
+    }));
+    setNodes([...nodes, ...newNds]);
+    setEdges([...edges, ...newEdgs]);
   };
 
   const onLookRunningRule = (warn?: string) => {
@@ -266,7 +291,11 @@ function App() {
     setChangedIds(result);
   };
 
-  const onSubmit = (type: SubmitType) => {
+  const onSubmit = async (type: SubmitType) => {
+    // const { data } = await isCanOperation(ruleId);
+
+    // if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
+
     const nds = nodes.filter((node) => node.data.title === '请设置内容');
     if (nds.length)
       return ConfirmModal({
@@ -298,7 +327,7 @@ function App() {
       JSON.parse(getTreeQuery.data?.data?.data?.ruleDataJson ?? '{}')
     );
 
-    if (jsonData === jsonNodes) {
+    if (jsonData === jsonNodes || nodes.length === 1) {
       if (type === 'sava')
         return ConfirmModal({
           title: '保存提示',
@@ -354,6 +383,17 @@ function App() {
               checkParam,
               checkSign: age.checkSign === 'ignore' ? undefined : age.checkSign,
               descParam: Array.isArray(paramVal) ? 'dict' : 'word'
+            };
+          });
+        }
+
+        if (values.nums) {
+          const { nums, checkParam, paramVal } = values;
+          return nums.map((num: any) => {
+            return {
+              ...num,
+              checkParam,
+              checkSign: num.checkSign === 'ignore' ? undefined : num.checkSign
             };
           });
         }

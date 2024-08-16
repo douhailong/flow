@@ -88,3 +88,17 @@ export function judgeHasDraft(ruleId: string) {
     url: `/recipehub/recipeRule/auditOrAddDraft?ruleId=${ruleId}`
   });
 }
+
+export function judgeHasPermission(ruleId: string) {
+  return request<any>({
+    method: 'post',
+    url: `/recipehub/recipeRuleDraft/auditDraftCheck?ruleId=${ruleId}`
+  });
+}
+
+export function isCanOperation(ruleId: string) {
+  return request<any>({
+    method: 'post',
+    url: `/recipehub/recipeRuleDraft/saveDraftCheck?ruleId=${ruleId}`
+  });
+}

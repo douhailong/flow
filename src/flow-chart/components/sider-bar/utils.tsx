@@ -22,9 +22,24 @@ export const timeOpts = [
 ];
 
 export const logicOpts = [
-  { label: '添加区间', value: 'ignore' },
+  { label: '取消区间', value: 'ignore' },
   { label: '且', value: 'and' },
   { label: '或', value: 'or' }
+];
+
+export const ceilOpts1 = [{ label: '数值', value: 'num' }];
+
+export const ceilOpts2 = [
+  { label: '数值', value: 'num' },
+  // {
+  //   label: '常规剂量每次上限',
+  //   value: 'ceil',
+  //   disabled: true
+  // },
+  {
+    label: '常规剂量每天上限',
+    value: 'dayCeil'
+  }
 ];
 
 export type Option = { label: string; value: string };
