@@ -206,7 +206,7 @@ function App() {
   const onCopy = () => {
     const nds = nodes.filter((node) => node.id.includes(selectedId));
     setCopyNode(nds);
-    message.success('复制成功');
+    // message.success('复制成功');
   };
 
   const onSwitchToMutable = async () => {
@@ -231,22 +231,36 @@ function App() {
   // TODO
   const onPaste = () => {
     if (!copyNode.length) return message.error('请先复制节点');
-    const firstNodeType = copyNode[0].data.type;
+    const pasteType = copyNode[0].data.type;
+    const selectedType = selectedNode?.data.type;
 
-    if (firstNodeType !== 'branch' && selectedNode?.data.type === 'root')
-      return message.error('根节点下只可以粘贴分支');
+    if (selectedType === 'root') {
+      if (pasteType !== 'branch') return message.error('根节点下只可以粘贴分支');
+    }
 
-    if (firstNodeType !== 'pureNode' && selectedNode?.data.type === 'branch')
-      return message.error('分支下只可以粘贴无判断节点');
+    if (selectedType === 'branch') {
+      if (pasteType !== 'pureNode') return message.error('分支下只可以粘贴无判断节点');
+    }
 
-    if (firstNodeType !== 'tip' && selectedNode?.data.type === 'node')
-      return message.error('判断节点下只能粘贴警示');
+    if (selectedType === 'pureNode' || selectedType === 'node') {
+      if (pasteType !== 'node' && pasteType !== 'tip')
+        return message.error('无判断节点只可以粘贴判断节点和警示');
+    }
 
-    if (
-      (firstNodeType !== 'node' || firstNodeType !== 'tip') &&
-      selectedNode?.data.type === 'pureNode'
-    )
-      return message.error('分支下只可以粘贴判断节点和警示');
+    // if (firstNodeType !== 'branch' && selectedNode?.data.type === 'root')
+    //   return message.error('根节点下只可以粘贴分支');
+
+    // if (firstNodeType !== 'pureNode' && selectedNode?.data.type === 'branch')
+    //   return message.error('分支下只可以粘贴无判断节点');
+
+    // if (firstNodeType !== 'tip' && selectedNode?.data.type === 'node')
+    //   return message.error('判断节点下只能粘贴警示');
+
+    // if (
+    //   (firstNodeType !== 'node' || firstNodeType !== 'tip') &&
+    //   selectedNode?.data.type === 'pureNode'
+    // )
+    //   return message.error('分支下只可以粘贴判断节点和警示');
 
     const edgs = edges
       .filter((edge) => edge.source === selectedId)

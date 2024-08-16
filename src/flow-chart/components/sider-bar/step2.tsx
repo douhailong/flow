@@ -147,6 +147,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       form.resetFields();
     }
     onSwitchCategoryType(form.getFieldValue('checkParam'));
+    setRelationOpts(
+      form.getFieldValue('checkParam') === 'specialBoilType' ? relationOpts2 : relationOpts1
+    );
   }, [selectedNode?.id]);
 
   const onSwitchCategoryType = (val: string) => {
@@ -176,6 +179,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
 
     if (changedValues.checkParam) {
       const val = changedValues.checkParam;
+      console.log(val, 'vvvvvvvvvvvvvvvv');
       const opts = ['specialBoilType', 'medicineName'].includes(val)
         ? relationOpts2
         : relationOpts1;
@@ -258,10 +262,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           dataSource={resultOpts as TransferData[]}
         />
       </Modal>
-      <Spin
-        // spinning={isFetching || isLoading || getDrugMutation.isLoading}
-        spinning={false}
-      >
+      <Spin spinning={isFetching || isLoading || getDrugMutation.isLoading}>
         <div className='pb-2'>节点详情</div>
         <Form
           clearOnDestroy
@@ -300,7 +301,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             }
 
             if (values.checkParam === 'perDose' || values.checkParam === 'dailyDose') {
-              let title = '剂量';
+              let title = selectedCategory === 'perDose' ? '每次剂量' : '每天剂量';
               values.nums.forEach((num: any) => {
                 title += ` ${!num.checkSign || num.checkSign === 'ignore' ? '' : descMapping[num.checkSign]} ${descMapping[num.connSign]} ${descMapping[num.descParam]} ${num.paramVal}${num.descParam === 'num' ? num.specialParam : '倍'}`;
               });
@@ -486,7 +487,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                           <Select options={ceilOpts} />
                         </Form.Item>
                       </Col>
-                      {operationTypes[index] === 'num' ? (
+                      {operationTypes[index] !== 'num' ? (
                         <>
                           <Col span={15}>
                             <Form.Item {...restField} name={[name, 'paramVal']}>

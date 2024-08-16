@@ -91,26 +91,27 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         </Form.Item>
 
         <div className='text-xs mb-2'>处理建议</div>
-        <Form.Item name='suggestParam' initialValue='name'>
+        <Form.Item name='suggestParam'>
           <Select
+            allowClear
             placeholder='请选择'
             options={options}
             onChange={(val) =>
-              form.setFieldValue('suggestion', val === 'name' ? '[药品·名称] ' : '[最小可分剂量] ')
+              form.setFieldValue('suggestion', val === 'name' ? '[药品·名称] ' : '')
             }
           />
         </Form.Item>
-        <Form.Item name='suggestion' initialValue='[药品·名称] '>
+        <Form.Item name='suggestion'>
           <Input.TextArea
             autoSize={{ maxRows: 3, minRows: 3 }}
-            onChange={(e) => {
-              const variable =
-                form.getFieldValue('suggestParam') === 'name' ? '[药品·名称] ' : '[最小可分剂量] ';
-              !e.target.value.includes(variable) &&
-                form.setFieldsValue({
-                  suggestion: variable
-                });
-            }}
+            // onChange={(e) => {
+            //   const variable =
+            //     form.getFieldValue('suggestParam') === 'name' ? '[药品·名称] ' : '[最小可分剂量] ';
+            //   !e.target.value.includes(variable) &&
+            //     form.setFieldsValue({
+            //       suggestion: variable
+            //     });
+            // }}
           />
         </Form.Item>
 
