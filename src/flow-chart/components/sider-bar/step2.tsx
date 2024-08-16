@@ -179,7 +179,6 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
 
     if (changedValues.checkParam) {
       const val = changedValues.checkParam;
-      console.log(val, 'vvvvvvvvvvvvvvvv');
       const opts = ['specialBoilType', 'medicineName'].includes(val)
         ? relationOpts2
         : relationOpts1;
@@ -205,9 +204,19 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
     if (values.checkParam === 'perDose') setCeilOpts(ceilOpts1);
     if (values.checkParam === 'dailyDose') setCeilOpts(ceilOpts2);
 
-    if (values.checkParam === 'age') return;
-    if (values.checkParam === 'perDose') return;
-    if (values.checkParam === 'dailyDose') return;
+    if (changedValues.checkParam && values.ages) return form.resetFields(['ages']);
+    // if (values.checkParam === 'perDose') return;
+    // if (values.checkParam === 'dailyDose') return;
+
+    // if (
+    //   values.checkParam === 'dailyDose' ||
+    //   values.checkParam === 'age' ||
+    //   values.checkParam === 'dailyDose'
+    // ) {
+    //   const keys = Object.keys(values).filter((key) => key !== 'checkParam');
+    //   console.log(keys, '------------');
+    //   return form.resetFields(keys);
+    // }
 
     // 重置当前修改Form.Item后面的值
     const curKey = Object.keys(changedValues)[0];

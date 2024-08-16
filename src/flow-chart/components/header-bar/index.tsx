@@ -1,7 +1,7 @@
-import React from 'react';
 import { Input, message } from 'antd';
 import clsx from 'clsx';
-import { type FlowViewNode, useFlowEditor } from '@ant-design/pro-flow';
+import { Info, Trash2, CopyPlus, ClipboardPaste } from 'lucide-react';
+import { type FlowViewNode } from '@ant-design/pro-flow';
 import type { NodeType } from '../../utils';
 
 import Copy from '@assets/copy.png';
@@ -19,6 +19,7 @@ import Edit from '@assets/edit.png';
 
 type HeaderBarProps = {
   selectedNode?: FlowViewNode;
+  mode: string;
   onAddBranch: (type: NodeType) => void;
   onDelete: () => void;
   onCopy: () => void;
@@ -27,7 +28,6 @@ type HeaderBarProps = {
   onLookRunningRule: (val?: string) => void;
   onSearch: (value: string, clear?: boolean) => void;
   onSubmit: (type: 'sava' | 'audit') => void;
-  mode: string;
 };
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -42,13 +42,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onSubmit,
   mode
 }) => {
-  const { undo, redo } = useFlowEditor();
-
   const type = selectedNode?.data.type;
 
-  const isTipDisaled = () => type !== 'node' && type !== 'pureNode';
-
-  const isNodeDisaled = () => type !== 'branch' && type !== 'node' && type !== 'pureNode';
+  const isTipDisaled = !['pureNode', 'node'].includes(type);
+  const isNodeDisaled = !['branch', 'node', 'pureNode'].includes(type);
 
   return (
     <div className='h-14 bg-gray-200 flex justify-between items-center px-8'>
@@ -83,27 +80,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
             <button
               className='text-xs flex flex-col items-center'
-              disabled={isNodeDisaled()}
+              disabled={isNodeDisaled}
               onClick={() => onAddBranch(type === 'branch' ? 'pureNode' : 'node')}
             >
               <img
                 width={24}
                 height={24}
                 src={Share}
-                className={clsx(isNodeDisaled() && 'opacity-30')}
+                className={clsx(isNodeDisaled && 'opacity-30')}
               />
               <span>节点</span>
             </button>
             <button
               className='text-xs flex flex-col items-center'
-              disabled={isTipDisaled()}
+              disabled={isTipDisaled}
               onClick={() => onAddBranch('tip')}
             >
               <img
                 width={24}
                 height={24}
                 src={Tip}
-                className={clsx(isTipDisaled() && 'opacity-30')}
+                className={clsx(isTipDisaled && 'opacity-30')}
               />
               <span>警示</span>
             </button>
@@ -124,13 +121,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             <button
               className='text-xs flex flex-col items-center'
               onClick={() => onPaste()}
-              disabled={selectedNode?.data.type === 'tip'}
+              disabled={type === 'tip'}
             >
               <img
                 width={24}
                 height={24}
                 src={Paste}
-                className={clsx(selectedNode?.data.type === 'tip' && 'opacity-30')}
+                className={clsx(type === 'tip' && 'opacity-30')}
               />
               <span>粘贴</span>
             </button>
@@ -165,10 +162,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         </>
       ) : mode === 'check' ? (
         <div className='flex space-x-4'>
-          <button
-            className='text-xs flex flex-col items-center'
-            onClick={() => onSwitchToMutable()}
-          >
+          <button className='text-xs flex flex-col items-center' onClick={onSwitchToMutable}>
             <img width={24} height={24} src={Edit} />
             <span>编辑规则</span>
           </button>
@@ -188,7 +182,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         placeholder='请输入搜索内容'
         onChange={(e) => {
           const value = e.target.value?.trim();
-          value === '' ? onSearch(e.target.value, true) : onSearch(e.target.value);
+          value === '' ? onSearch(value, true) : onSearch(value);
         }}
       />
     </div>

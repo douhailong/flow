@@ -193,6 +193,7 @@ function App() {
         SelectType.DEFAULT
       );
     }
+
     selectNodes(
       nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
       SelectType.DANGER
@@ -204,9 +205,9 @@ function App() {
   };
 
   const onCopy = () => {
-    const nds = nodes.filter((node) => node.id.includes(selectedId));
+    const nds = nodes.filter(({ id }) => id.includes(selectedId));
     setCopyNode(nds);
-    // message.success('复制成功');
+    message.success('复制成功');
   };
 
   const onSwitchToMutable = async () => {
@@ -246,21 +247,6 @@ function App() {
       if (pasteType !== 'node' && pasteType !== 'tip')
         return message.error('无判断节点只可以粘贴判断节点和警示');
     }
-
-    // if (firstNodeType !== 'branch' && selectedNode?.data.type === 'root')
-    //   return message.error('根节点下只可以粘贴分支');
-
-    // if (firstNodeType !== 'pureNode' && selectedNode?.data.type === 'branch')
-    //   return message.error('分支下只可以粘贴无判断节点');
-
-    // if (firstNodeType !== 'tip' && selectedNode?.data.type === 'node')
-    //   return message.error('判断节点下只能粘贴警示');
-
-    // if (
-    //   (firstNodeType !== 'node' || firstNodeType !== 'tip') &&
-    //   selectedNode?.data.type === 'pureNode'
-    // )
-    //   return message.error('分支下只可以粘贴判断节点和警示');
 
     const edgs = edges
       .filter((edge) => edge.source === selectedId)
@@ -306,9 +292,9 @@ function App() {
   };
 
   const onSubmit = async (type: SubmitType) => {
-    // const { data } = await isCanOperation(ruleId);
+    const { data } = await isCanOperation(ruleId);
 
-    // if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
+    if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
 
     const nds = nodes.filter((node) => node.data.title === '请设置内容');
     if (nds.length)
