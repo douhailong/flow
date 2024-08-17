@@ -18,7 +18,7 @@ const Footer: React.FC<FooterProps> = ({
   return (
     <div className='h-10 bg-gray-200 flex justify-between items-center px-8 text-xs text-gray-600'>
       <div className='flex space-x-3'>
-        {version[0] === 'V' && (
+        {version?.[0] === 'V' && (
           <>
             <span>
               {ruleName} {version}

@@ -14,7 +14,6 @@ import {
   Spin,
   InputNumber
 } from 'antd';
-import type { GetProp, TransferProps, TreeDataNode } from 'antd';
 import { useMutation, useQuery } from 'react-query';
 
 import TransferTree from './transfer-tree';
@@ -37,7 +36,11 @@ import {
 import { getCategorys, getDrugs, type GetCategory } from '@services';
 import clsx from 'clsx';
 
-const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
+const Step2: React.FC<SiderBarProps> = ({
+  selectedNode,
+  parentNode,
+  onFinish
+}) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
   const [flatDiseaseOpts, setFlatDiseaseOpts] = useState<Option[]>([]);
   const [resultOpts, serResultOpts] = useState<Option[]>([]);
@@ -46,7 +49,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
   const [categoryType, setCategoryType] = useState<CategoryType>('default');
   const [relationType, setRelationType] = useState<RelationType>('in');
   const [operationType, setOperationType] = useState<'dict' | 'word'>('dict');
-  const [operationTypes, setOperationTypes] = useState<('num' | 'dayCeil' | 'ceil')[]>(['num']);
+  const [operationTypes, setOperationTypes] = useState<
+    ('num' | 'dayCeil' | 'ceil')[]
+  >(['num']);
   const [desc, setDesc] = useState('');
   const [isOpenTree, setIsOpenTree] = useState(false);
   const [isOpenTable, setIsOpenTable] = useState(false);
@@ -64,7 +69,8 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       onSuccess({ data }) {
         const opts = data.data
           .reduce(
-            (pre, cur) => (cur.children ? [...pre, ...cur.children] : [...pre, cur]),
+            (pre, cur) =>
+              cur.children ? [...pre, ...cur.children] : [...pre, cur],
             [] as GetCategory[]
           )
           .map(({ label, value }) => ({ label, value }));
@@ -139,16 +145,23 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       onSwitchCategoryType(val);
       setSelectedCategory(val);
       setRelationType(form.getFieldValue('connSign'));
+
+      const aa = nodeData?.jsonData?.nums || nodeData?.jsonData?.ages || [];
+      const operats = aa.map((num: any) => num?.descParam ?? 'num');
+      setOperationTypes(operats);
       val === 'dailyDose' ? setCeilOpts(ceilOpts2) : setCeilOpts(ceilOpts1);
       val === 'medicineName' ? getDrugMutation.mutate() : mutate(val);
     } else {
       setDesc('');
       mutate('specialBoilType');
       form.resetFields();
+      setRelationType('in');
     }
     onSwitchCategoryType(form.getFieldValue('checkParam'));
     setRelationOpts(
-      form.getFieldValue('checkParam') === 'specialBoilType' ? relationOpts2 : relationOpts1
+      form.getFieldValue('checkParam') === 'specialBoilType'
+        ? relationOpts2
+        : relationOpts1
     );
   }, [selectedNode?.id]);
 
@@ -167,13 +180,6 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
 
   const onValuesChange = (changedValues: any, values: any) => {
     if (changedValues.sourceResult) return;
-
-    // console.log(changedValues, 'changedValues.changedValues', values);
-
-    if (changedValues.nums) {
-      const operats = values.nums.map((num: any) => num?.descParam ?? 'num');
-      setOperationTypes(operats);
-    }
 
     if (!values.nums) setOperationTypes(['num']);
 
@@ -204,22 +210,20 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
     if (values.checkParam === 'perDose') setCeilOpts(ceilOpts1);
     if (values.checkParam === 'dailyDose') setCeilOpts(ceilOpts2);
 
-    if (changedValues.checkParam && values.ages) return form.resetFields(['ages']);
-    // if (values.checkParam === 'perDose') return;
-    // if (values.checkParam === 'dailyDose') return;
+    if (!changedValues.nums && !changedValues.ages)
+      form.resetFields(['ages', 'nums']);
 
-    // if (
-    //   values.checkParam === 'dailyDose' ||
-    //   values.checkParam === 'age' ||
-    //   values.checkParam === 'dailyDose'
-    // ) {
-    //   const keys = Object.keys(values).filter((key) => key !== 'checkParam');
-    //   console.log(keys, '------------');
-    //   return form.resetFields(keys);
-    // }
+    const operats = form
+      .getFieldValue('nums')
+      ?.map((num: any) => num?.descParam ?? 'num');
+    setOperationTypes(operats || ['num']);
+
+    if (values.checkParam === 'age') return;
+    if (values.checkParam === 'perDose') return;
+    if (values.checkParam === 'dailyDose') return;
 
     // 重置当前修改Form.Item后面的值
-    const curKey = Object.keys(changedValues)[0];
+    const curKey = Object.keys(changedValues)?.[0];
     const keys = ['checkParam', 'connSign', 'descParam', 'paramVal'];
     const index = keys.findIndex((key) => key === curKey);
     form.resetFields(keys.slice(index + 1));
@@ -280,22 +284,26 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             if (values.nums) {
               if (
                 values?.nums?.filter(
-                  (num: any) => num.paramVal === null || num.paramVal === undefined
+                  (num: any) =>
+                    num.paramVal === null || num.paramVal === undefined
                 ).length
               )
                 return message.error('请填写完整节点数据');
             } else if (values.ages) {
               if (
                 values?.ages?.filter(
-                  (age: any) => age.paramVal === null || age.paramVal === undefined
+                  (age: any) =>
+                    age.paramVal === null || age.paramVal === undefined
                 ).length
               )
                 return message.error('请填写完整节点数据');
             } else {
               if (
                 (!values.paramVal ||
-                  (Array.isArray(values.paramVal) && values.paramVal.length === 0) ||
-                  (typeof values.paramVal === 'string' && values.paramVal.trim() === '')) &&
+                  (Array.isArray(values.paramVal) &&
+                    values.paramVal.length === 0) ||
+                  (typeof values.paramVal === 'string' &&
+                    values.paramVal.trim() === '')) &&
                 values.connSign !== 'isnull'
               )
                 return message.error('请填写完整节点数据');
@@ -309,8 +317,12 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
               return onFinish({ step: 2, values, title });
             }
 
-            if (values.checkParam === 'perDose' || values.checkParam === 'dailyDose') {
-              let title = selectedCategory === 'perDose' ? '每次剂量' : '每天剂量';
+            if (
+              values.checkParam === 'perDose' ||
+              values.checkParam === 'dailyDose'
+            ) {
+              let title =
+                selectedCategory === 'perDose' ? '每次剂量' : '每天剂量';
               values.nums.forEach((num: any) => {
                 title += ` ${!num.checkSign || num.checkSign === 'ignore' ? '' : descMapping[num.checkSign]} ${descMapping[num.connSign]} ${descMapping[num.descParam]} ${num.paramVal}${num.descParam === 'num' ? num.specialParam : '倍'}`;
               });
@@ -433,7 +445,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                   placeholder='请选择'
                   onChange={() => undefined}
                   onClick={() =>
-                    selectedCategory === 'pathogen' ? setIsOpenTree(true) : setIsOpenTable(true)
+                    selectedCategory === 'pathogen'
+                      ? setIsOpenTree(true)
+                      : setIsOpenTable(true)
                   }
                   value={
                     form.getFieldValue('paramVal')?.length
@@ -453,7 +467,12 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                 {operationType === 'word' ? (
                   <Input placeholder='请输入' />
                 ) : (
-                  <Select allowClear mode='multiple' placeholder='请选择' options={resultOpts} />
+                  <Select
+                    allowClear
+                    mode='multiple'
+                    placeholder='请选择'
+                    options={resultOpts}
+                  />
                 )}
               </Form.Item>
             </Colation>
@@ -478,29 +497,47 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                     <Row gutter={12} key={key}>
                       {index !== 0 && (
                         <Col span={24}>
-                          <Form.Item {...restField} name={[name, 'checkSign']} initialValue='and'>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'checkSign']}
+                            initialValue='and'
+                          >
                             <Select
                               options={logicOpts}
-                              onChange={(val) => val === 'ignore' && remove(key)}
+                              onChange={(val) =>
+                                val === 'ignore' && remove(index)
+                              }
                             />
                           </Form.Item>
                         </Col>
                       )}
                       <Col span={9}>
-                        <Form.Item {...restField} name={[name, 'connSign']} initialValue='gt'>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'connSign']}
+                          initialValue='gt'
+                        >
                           <Select options={contrastOpts} />
                         </Form.Item>
                       </Col>
                       <Col span={15}>
-                        <Form.Item {...restField} name={[name, 'descParam']} initialValue='num'>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'descParam']}
+                          initialValue='num'
+                        >
                           <Select options={ceilOpts} />
                         </Form.Item>
                       </Col>
-                      {operationTypes[index] !== 'num' ? (
+                      {operationTypes[index] === 'num' ? (
                         <>
                           <Col span={15}>
                             <Form.Item {...restField} name={[name, 'paramVal']}>
-                              <InputNumber min={0} placeholder='请输入' className='w-full' />
+                              <InputNumber
+                                min={0}
+                                placeholder='请输入'
+                                className='w-full'
+                              />
                             </Form.Item>
                           </Col>
                           <Col span={9}>
@@ -560,16 +597,26 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                     <Row gutter={12} key={key}>
                       {index !== 0 && (
                         <Col span={24}>
-                          <Form.Item {...restField} name={[name, 'checkSign']} initialValue='and'>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'checkSign']}
+                            initialValue='and'
+                          >
                             <Select
                               options={logicOpts}
-                              onChange={(val) => val === 'ignore' && remove(key)}
+                              onChange={(val) =>
+                                val === 'ignore' && remove(index)
+                              }
                             />
                           </Form.Item>
                         </Col>
                       )}
                       <Col span={9}>
-                        <Form.Item {...restField} name={[name, 'connSign']} initialValue='gt'>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'connSign']}
+                          initialValue='gt'
+                        >
                           <Select options={contrastOpts} />
                         </Form.Item>
                       </Col>
@@ -579,7 +626,11 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                         </Form.Item>
                       </Col>
                       <Col span={6}>
-                        <Form.Item {...restField} name={[name, 'specialParam']} initialValue='day'>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'specialParam']}
+                          initialValue='day'
+                        >
                           <Select options={timeOpts} />
                         </Form.Item>
                       </Col>
@@ -628,6 +679,7 @@ const ParentReslut = ({ title }: { title: string }) => (
 
 type ColationProps = { show: boolean; children: React.ReactNode };
 
-const Colation = ({ show, children }: ColationProps) => (show ? children : null);
+const Colation = ({ show, children }: ColationProps) =>
+  show ? children : null;
 
 export default Step2;

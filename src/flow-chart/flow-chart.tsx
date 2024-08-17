@@ -63,7 +63,8 @@ function App() {
   });
 
   useEffect(() => {
-    const { version, ruleType, ruleName, auditTime, mode, hasDraft, nodeId } = stores;
+    const { version, ruleType, ruleName, auditTime, mode, hasDraft, nodeId } =
+      stores;
     sessionStorage.setItem('hasDraft', hasDraft);
     sessionStorage.setItem('ruleName', ruleName);
     sessionStorage.setItem('ruleType', ruleType);
@@ -77,10 +78,15 @@ function App() {
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 10);
-    if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
+    if (stores.nodeId && stores.mode === 'check')
+      onLookRunningRule(stores.nodeId);
   }, [edges, nodes]);
 
   useEffect(() => {
+    selectNodes(
+      nodes.map((node) => node.id),
+      SelectType.DEFAULT
+    );
     setTimeout(() => selectNodes(changedIds, SelectType.DANGER), 100);
   }, [changedIds]);
 
@@ -104,10 +110,13 @@ function App() {
     {
       onSuccess(res) {
         const data = res.data.data;
-        if (data.ruleDataJson && data.ruleRelateJson) {
+        if (data?.ruleDataJson && data?.ruleRelateJson) {
           setEdges(JSON.parse(data.ruleRelateJson));
           setNodes(JSON.parse(data.ruleDataJson));
         }
+      },
+      onError() {
+        message.error('操作失败，请重试');
       }
     }
   );
@@ -119,10 +128,14 @@ function App() {
       setStores({
         ...stores,
         ruleType,
-        version: version[0] === 'V' ? version : stores.version,
-        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
+        version: version?.[0] === 'V' ? version : stores.version,
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
+          .data.title
       });
       setTimeout(() => getTreeQuery.refetch(), 10);
+    },
+    onError({ data }) {
+      message.error(data.errorMsg);
     }
   });
 
@@ -133,10 +146,14 @@ function App() {
       setStores({
         ...stores,
         ruleType,
-        version: version[0] === 'V' ? version : stores.version,
-        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')[0].data.title
+        version: version?.[0] === 'V' ? version : stores.version,
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
+          .data.title
       });
       setTimeout(() => getTreeQuery.refetch(), 10);
+    },
+    onError({ data }) {
+      message.error(data.errorMsg);
     }
   });
 
@@ -145,7 +162,8 @@ function App() {
   const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
   const selectedNode = nodes.find((node) => node.id === selectedId);
   const parentNode = nodes.find(
-    (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
+    (node) =>
+      node.id === edges.find((edge) => edge.target === selectedId)?.source
   );
 
   const onAddBranch = (type: NodeType) => {
@@ -157,7 +175,8 @@ function App() {
         !Number.isNaN(Number(node.id.split(`${selectedId}&`)[1]))
     );
     const last = filter[filter.length - 1];
-    const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
+    const preNum =
+      last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
 
     setNodes([
       ...nodes,
@@ -195,11 +214,15 @@ function App() {
     }
 
     selectNodes(
-      nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
+      nodes
+        .filter((node) => node.data.title.includes(value))
+        .map((node) => node.id),
       SelectType.DANGER
     );
     selectNodes(
-      nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
+      nodes
+        .filter((node) => !node.data.title.includes(value))
+        .map((node) => node.id),
       SelectType.DEFAULT
     );
   };
@@ -213,7 +236,8 @@ function App() {
   const onSwitchToMutable = async () => {
     const { data } = await judgeHasPermission(ruleId);
 
-    if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
+    if (data?.resultCode !== '00000')
+      return message.error('有用户正在编辑规则，无法再次进行编辑');
 
     if (stores.hasDraft === 'true') {
       ConfirmModal({
@@ -232,15 +256,17 @@ function App() {
   // TODO
   const onPaste = () => {
     if (!copyNode.length) return message.error('请先复制节点');
-    const pasteType = copyNode[0].data.type;
+    const pasteType = copyNode[0]?.data.type;
     const selectedType = selectedNode?.data.type;
 
     if (selectedType === 'root') {
-      if (pasteType !== 'branch') return message.error('根节点下只可以粘贴分支');
+      if (pasteType !== 'branch')
+        return message.error('根节点下只可以粘贴分支');
     }
 
     if (selectedType === 'branch') {
-      if (pasteType !== 'pureNode') return message.error('分支下只可以粘贴无判断节点');
+      if (pasteType !== 'pureNode')
+        return message.error('分支下只可以粘贴无判断节点');
     }
 
     if (selectedType === 'pureNode' || selectedType === 'node') {
@@ -283,7 +309,8 @@ function App() {
           curWarns.includes(curNode.id) &&
           !result.includes(curNode.id) &&
           curNode.id !== 'root' &&
-          curNode.data.isWarnUse !== 'F'
+          // curNode.data.isWarnUse !== 'F'
+          (warn ? true : curNode.data.isWarnUse !== 'F')
         )
           result.push(curNode.id);
       }
@@ -292,35 +319,6 @@ function App() {
   };
 
   const onSubmit = async (type: SubmitType) => {
-    const { data } = await isCanOperation(ruleId);
-
-    if (data?.resultCode !== '00000') return message.error('有用户正在编辑规则，无法再次进行编辑');
-
-    const nds = nodes.filter((node) => node.data.title === '请设置内容');
-    if (nds.length)
-      return ConfirmModal({
-        title: '提示',
-        content: '操作失败，请填写完整节点数据',
-        cancelButtonProps: { style: { display: 'none' } }
-      });
-
-    const payload = {
-      ruleId,
-      ruleNum,
-      ruleName: stores.ruleName,
-      ruleBranchNum: branchNum,
-      ruleNodeNum: nodeNum,
-      ruleRelate: edges,
-      ruleData: nodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          nodeName: node.data.title,
-          nodeType: nodeTypeMapping[node.data.type as NodeType]
-        }
-      }))
-    };
-
     const jsonNodes = JSON.stringify(nodes);
     // 接口返回的JSON数据格式和JSON.stringify的不一样
     const jsonData = JSON.stringify(
@@ -342,39 +340,78 @@ function App() {
           cancelButtonProps: { style: { display: 'none' } }
         });
     }
-    type === 'sava' && saveRuleMutation.mutate(payload);
 
-    const edgs = edges.map((edg) => edg.source);
-    const ndss = nodes.filter((node) => !edgs.includes(node.id) && node.data.type !== 'tip');
+    isCanOperation(ruleId).then(
+      () => {
+        submit();
+      },
+      ({ data }) => {
+        message.error(data.errorMsg);
+      }
+    );
 
-    if (type === 'audit' && ndss.length)
-      return ConfirmModal({
-        title: '审核提示',
-        content: '审核失败，规则不完整，请进行查验',
-        cancelButtonProps: { style: { display: 'none' } }
-      });
+    function submit() {
+      const nds = nodes.filter((node) => node.data.title === '请设置内容');
+      if (nds.length)
+        return ConfirmModal({
+          title: '提示',
+          content: '操作失败，请填写完整节点数据',
+          cancelButtonProps: { style: { display: 'none' } }
+        });
 
-    type === 'audit' &&
-      ConfirmModal({
-        title: '审核提示',
-        content: '将审核当下修改，通过所有未审核规则',
-        onOk: () => auditRuleMutation.mutate(payload)
-      });
+      const payload = {
+        ruleId,
+        ruleNum,
+        ruleName: stores.ruleName,
+        ruleBranchNum: branchNum,
+        ruleNodeNum: nodeNum,
+        ruleRelate: edges,
+        ruleData: nodes.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            nodeName: node.data.title,
+            nodeType: nodeTypeMapping[node.data.type as NodeType]
+          }
+        }))
+      };
+
+      type === 'sava' && saveRuleMutation.mutate(payload);
+
+      const edgs = edges.map((edg) => edg.source);
+      const ndss = nodes.filter(
+        (node) => !edgs.includes(node.id) && node.data.type !== 'tip'
+      );
+
+      if (type === 'audit' && ndss.length)
+        return ConfirmModal({
+          title: '审核提示',
+          content: '审核失败，规则不完整，请进行查验',
+          cancelButtonProps: { style: { display: 'none' } }
+        });
+
+      type === 'audit' &&
+        ConfirmModal({
+          title: '审核提示',
+          content: '将审核当下修改，通过所有未审核规则',
+          onOk: () => auditRuleMutation.mutate(payload)
+        });
+    }
   };
 
   const onFinish = ({ step, values, title }: OnFinishProps) => {
     if (step === 1) {
       setNodes(
         nodes.map((node) => {
-          return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
+          return node.id === selectedId
+            ? { ...node, data: { ...node.data, title } }
+            : node;
         })
       );
     }
 
     if (step === 2) {
       function specialJsonData() {
-        console.log(values, '-------------------');
-
         if (values.ages) {
           const { ages, checkParam, paramVal } = values;
           return ages.map((age: any) => {
@@ -409,7 +446,11 @@ function App() {
                   needJson: 'T',
                   title,
                   sourceResult: values.sourceResult,
-                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                  logo: values.sourceResult
+                    ? values.sourceResult === 'T'
+                      ? Yes
+                      : No
+                    : undefined,
                   jsonData: {
                     ...values,
                     descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
@@ -433,7 +474,11 @@ function App() {
                 data: {
                   ...node.data,
                   title,
-                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                  logo: values.sourceResult
+                    ? values.sourceResult === 'T'
+                      ? Yes
+                      : No
+                    : undefined,
                   sourceResult: values.sourceResult,
                   isWarnUse: values.isWarnUse,
                   warnContent: values,
@@ -446,7 +491,9 @@ function App() {
                 style: {
                   background:
                     // @ts-ignore
-                    values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
+                    values.isWarnUse === 'F'
+                      ? levelColors.disabled
+                      : levelColors[values.warnLevel]
                 }
               }
             : node;
@@ -491,7 +538,11 @@ function App() {
           {stores.mode === 'mutable' && (
             <div className='w-72 p-2 overflow-y-auto relative'>
               {/* @ts-ignore */}
-              <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
+              <SiderBar
+                onFinish={onFinish}
+                selectedNode={selectedNode}
+                parentNode={parentNode}
+              />
             </div>
           )}
         </div>

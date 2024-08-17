@@ -52,7 +52,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       {mode === 'mutable' ? (
         <>
           <div className='flex space-x-4'>
-            <button className='text-xs flex flex-col items-center' onClick={() => onSubmit('sava')}>
+            <button
+              className='text-xs flex flex-col items-center'
+              onClick={() => onSubmit('sava')}
+            >
               <img width={24} height={24} src={Save} />
               <span>保存</span>
             </button>
@@ -81,7 +84,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             <button
               className='text-xs flex flex-col items-center'
               disabled={isNodeDisaled}
-              onClick={() => onAddBranch(type === 'branch' ? 'pureNode' : 'node')}
+              onClick={() =>
+                onAddBranch(type === 'branch' ? 'pureNode' : 'node')
+              }
             >
               <img
                 width={24}
@@ -154,7 +159,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
                 width={24}
                 height={24}
                 src={Delete}
-                className={clsx((selectedNode?.id === 'root' || !selectedNode?.id) && 'opacity-30')}
+                className={clsx(
+                  (selectedNode?.id === 'root' || !selectedNode?.id) &&
+                    'opacity-30'
+                )}
               />
               <span>删除</span>
             </button>
@@ -162,7 +170,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         </>
       ) : mode === 'check' ? (
         <div className='flex space-x-4'>
-          <button className='text-xs flex flex-col items-center' onClick={onSwitchToMutable}>
+          <button
+            className='text-xs flex flex-col items-center'
+            onClick={onSwitchToMutable}
+          >
             <img width={24} height={24} src={Edit} />
             <span>编辑规则</span>
           </button>
