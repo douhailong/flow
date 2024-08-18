@@ -19,15 +19,15 @@ import {
   nodeColors,
   levelColors,
   nodeTypeMapping,
-  RootNode,
-  ruleId,
-  ruleName,
-  version,
-  ruleType,
-  hasDraft,
-  auditTime,
-  mode,
-  nodeId
+  RootNode
+  // ruleId
+  // ruleName,
+  // version,
+  // ruleType,
+  // hasDraft,
+  // auditTime,
+  // mode,
+  // nodeId
 } from './utils';
 import type { OnFinishProps } from './components/sider-bar';
 import ConfirmModal from '@components/confirm-modal/confirm-modal';
@@ -48,32 +48,51 @@ import Yes from '@assets/yes.png';
 function App() {
   const [copyNode, setCopyNode] = useState<FlowViewNode[]>([]);
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
-  const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(ruleName));
+  const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(''));
   const [selectedId, setSelectedId] = useState<string>('root');
   const [changedIds, setChangedIds] = useState<string[]>([]);
   const [show, setShow] = useState(true);
   const [stores, setStores] = useState({
-    version,
-    ruleType,
-    ruleName,
-    auditTime,
-    hasDraft,
-    mode,
-    nodeId
+    version: '',
+    ruleType: '',
+    ruleName: '',
+    auditTime: '',
+    hasDraft: '',
+    mode: '',
+    nodeId: '',
+    ruleId: ''
   });
 
   useEffect(() => {
-    const { version, ruleType, ruleName, auditTime, mode, hasDraft, nodeId } =
-      stores;
-    sessionStorage.setItem('hasDraft', hasDraft);
-    sessionStorage.setItem('ruleName', ruleName);
-    sessionStorage.setItem('ruleType', ruleType);
-    sessionStorage.setItem('version', version);
-    sessionStorage.setItem('auditTime', auditTime);
-    sessionStorage.setItem('mode', mode);
+    window.addEventListener('message', function (e) {
+      const data = e.data;
+      if (data.source === 'parentWindow') {
+        const {
+          ruleVersion,
+          ruleType,
+          ruleName,
+          auditTime,
+          hasDraft,
+          mode,
+          nodeId = undefined,
+          ruleId
+        } = data.data;
 
-    // () => sessionStorage.clear();
-  }, [stores]);
+        console.log(data.data, '-------???????-------');
+
+        setStores({
+          version: ruleVersion,
+          ruleType,
+          ruleName,
+          auditTime,
+          hasDraft,
+          mode,
+          nodeId,
+          ruleId
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setShow(false);
@@ -95,21 +114,27 @@ function App() {
   const judgeHasDraftMutation = useMutation(judgeHasDraft, {
     onSuccess(res) {
       setStores({ ...stores, mode: 'mutable', ruleType: '3' });
-      setTimeout(() => getTreeQuery.refetch(), 10);
+      setTimeout(
+        () =>
+          getTreeQuery.mutate({
+            ruleId: stores.ruleId,
+            ruleVersion: stores.version,
+            ruleType: stores.ruleType
+          }),
+        10
+      );
     }
   });
 
-  const getTreeQuery = useQuery(
-    ['getTreeQuery'],
-    () =>
-      getTreeData({
-        ruleId,
-        ruleVersion: stores.version,
-        ruleType: stores.ruleType
-      }),
+  const getTreeQuery = useMutation(
+    getTreeData,
+
     {
       onSuccess(res) {
         const data = res.data.data;
+        setNodes([
+          { ...nodes[0], data: { ...nodes[0].data, title: data.ruleName } }
+        ]);
         if (data?.ruleDataJson && data?.ruleRelateJson) {
           setEdges(JSON.parse(data.ruleRelateJson));
           setNodes(JSON.parse(data.ruleDataJson));
@@ -120,6 +145,16 @@ function App() {
       }
     }
   );
+
+  useEffect(() => {
+    if (stores.ruleId) {
+      getTreeQuery.mutate({
+        ruleId: stores.ruleId,
+        ruleVersion: stores.version,
+        ruleType: stores.ruleType
+      });
+    }
+  }, [stores]);
 
   const auditRuleMutation = useMutation(auditRuleDraft, {
     onSuccess({ data }) {
@@ -132,7 +167,19 @@ function App() {
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
           .data.title
       });
-      setTimeout(() => getTreeQuery.refetch(), 10);
+      window.parent.postMessage(
+        { source: 'flow', data: { success: true } },
+        '*'
+      );
+      // setTimeout(
+      //   () =>
+      //     getTreeQuery.mutate({
+      //       ruleId: stores.ruleId,
+      //       ruleVersion: stores.version,
+      //       ruleType: stores.ruleType
+      //     }),
+      //   10
+      // );
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -150,7 +197,19 @@ function App() {
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
           .data.title
       });
-      setTimeout(() => getTreeQuery.refetch(), 10);
+      window.parent.postMessage(
+        { source: 'flow', data: { success: true } },
+        '*'
+      );
+      // setTimeout(
+      //   () =>
+      //     getTreeQuery.mutate({
+      //       ruleId: stores.ruleId,
+      //       ruleVersion: stores.version,
+      //       ruleType: stores.ruleType
+      //     }),
+      //   10
+      // );
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -158,6 +217,7 @@ function App() {
   });
 
   const nodeNum = nodes.length;
+  const ruleName = nodes[0].data.title;
   const ruleNum = nodes.filter((node) => node.data.type === 'tip').length;
   const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
   const selectedNode = nodes.find((node) => node.id === selectedId);
@@ -234,7 +294,7 @@ function App() {
   };
 
   const onSwitchToMutable = async () => {
-    const { data } = await judgeHasPermission(ruleId);
+    const { data } = await judgeHasPermission(stores.ruleId);
 
     if (data?.resultCode !== '00000')
       return message.error('有用户正在编辑规则，无法再次进行编辑');
@@ -245,11 +305,19 @@ function App() {
         content: '已有规则草稿，是否前往编辑？',
         onOk: () => {
           setStores({ ...stores, mode: 'mutable', ruleType: '3' });
-          setTimeout(() => getTreeQuery.refetch(), 10);
+          setTimeout(
+            () =>
+              getTreeQuery.mutate({
+                ruleId: stores.ruleId,
+                ruleVersion: stores.version,
+                ruleType: stores.ruleType
+              }),
+            10
+          );
         }
       });
     } else {
-      judgeHasDraftMutation.mutate(ruleId);
+      judgeHasDraftMutation.mutate(stores.ruleId);
     }
   };
 
@@ -325,7 +393,7 @@ function App() {
       JSON.parse(getTreeQuery.data?.data?.data?.ruleDataJson ?? '{}')
     );
 
-    if (jsonData === jsonNodes || nodes.length === 1) {
+    if (jsonData === jsonNodes) {
       if (type === 'sava')
         return ConfirmModal({
           title: '保存提示',
@@ -341,7 +409,7 @@ function App() {
         });
     }
 
-    isCanOperation(ruleId).then(
+    isCanOperation(stores.ruleId).then(
       () => {
         submit();
       },
@@ -360,9 +428,9 @@ function App() {
         });
 
       const payload = {
-        ruleId,
+        ruleId: stores.ruleId,
         ruleNum,
-        ruleName: stores.ruleName,
+        ruleName: ruleName,
         ruleBranchNum: branchNum,
         ruleNodeNum: nodeNum,
         ruleRelate: edges,
@@ -504,7 +572,7 @@ function App() {
 
   return (
     <div className='h-full'>
-      <Spin tip='加载中...' spinning={getTreeQuery.isFetching}>
+      <Spin tip='加载中...' spinning={getTreeQuery.isLoading}>
         <HeaderBar
           selectedNode={selectedNode}
           onSwitchToMutable={onSwitchToMutable}
