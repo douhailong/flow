@@ -534,7 +534,7 @@ const Step2: React.FC<SiderBarProps> = ({
                           <Col span={15}>
                             <Form.Item {...restField} name={[name, 'paramVal']}>
                               <InputNumber
-                                precision={1}
+                                precision={2}
                                 min={0}
                                 placeholder='请输入'
                                 className='w-full'
@@ -563,7 +563,7 @@ const Step2: React.FC<SiderBarProps> = ({
                         <Col span={24}>
                           <Form.Item {...restField} name={[name, 'paramVal']}>
                             <InputNumber
-                              precision={1}
+                              precision={2}
                               min={0}
                               placeholder='请输入'
                               suffix='倍'
@@ -624,7 +624,11 @@ const Step2: React.FC<SiderBarProps> = ({
                       </Col>
                       <Col span={9}>
                         <Form.Item {...restField} name={[name, 'paramVal']}>
-                          <InputNumber min={0} placeholder='请输入' />
+                          <InputNumber
+                            precision={1}
+                            min={0}
+                            placeholder='请输入'
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={6}>

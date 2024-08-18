@@ -78,8 +78,6 @@ function App() {
           ruleId
         } = data.data;
 
-        console.log(data.data, '-------???????-------');
-
         setStores({
           version: ruleVersion,
           ruleType,
@@ -91,6 +89,17 @@ function App() {
           ruleId
         });
       }
+    });
+
+    setStores({
+      auditTime: '2024-08-18 16:30:57',
+      hasDraft: '2',
+      mode: 'mutable',
+      ruleId: '7f53acf58b3f4a438328564083bc5cef',
+      ruleName: '888',
+      ruleType: '1',
+      version: 'V1.2',
+      nodeId: 'undefined'
     });
   }, []);
 
@@ -114,37 +123,29 @@ function App() {
   const judgeHasDraftMutation = useMutation(judgeHasDraft, {
     onSuccess(res) {
       setStores({ ...stores, mode: 'mutable', ruleType: '3' });
-      setTimeout(
-        () =>
-          getTreeQuery.mutate({
-            ruleId: stores.ruleId,
-            ruleVersion: stores.version,
-            ruleType: stores.ruleType
-          }),
-        10
-      );
+      getTreeQuery.mutate({
+        ruleId: stores.ruleId,
+        ruleVersion: stores.version,
+        ruleType: stores.ruleType
+      });
     }
   });
 
-  const getTreeQuery = useMutation(
-    getTreeData,
-
-    {
-      onSuccess(res) {
-        const data = res.data.data;
-        setNodes([
-          { ...nodes[0], data: { ...nodes[0].data, title: data.ruleName } }
-        ]);
-        if (data?.ruleDataJson && data?.ruleRelateJson) {
-          setEdges(JSON.parse(data.ruleRelateJson));
-          setNodes(JSON.parse(data.ruleDataJson));
-        }
-      },
-      onError() {
-        message.error('操作失败，请重试');
+  const getTreeQuery = useMutation(getTreeData, {
+    onSuccess(res) {
+      const data = res.data.data;
+      setNodes([
+        { ...nodes[0], data: { ...nodes[0].data, title: data.ruleName } }
+      ]);
+      if (data?.ruleDataJson && data?.ruleRelateJson) {
+        setEdges(JSON.parse(data.ruleRelateJson));
+        setNodes(JSON.parse(data.ruleDataJson));
       }
+    },
+    onError() {
+      message.error('操作失败，请重试');
     }
-  );
+  });
 
   useEffect(() => {
     if (stores.ruleId) {
@@ -171,15 +172,6 @@ function App() {
         { source: 'flow', data: { success: true } },
         '*'
       );
-      // setTimeout(
-      //   () =>
-      //     getTreeQuery.mutate({
-      //       ruleId: stores.ruleId,
-      //       ruleVersion: stores.version,
-      //       ruleType: stores.ruleType
-      //     }),
-      //   10
-      // );
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -201,15 +193,6 @@ function App() {
         { source: 'flow', data: { success: true } },
         '*'
       );
-      // setTimeout(
-      //   () =>
-      //     getTreeQuery.mutate({
-      //       ruleId: stores.ruleId,
-      //       ruleVersion: stores.version,
-      //       ruleType: stores.ruleType
-      //     }),
-      //   10
-      // );
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -293,31 +276,37 @@ function App() {
     message.success('复制成功');
   };
 
-  const onSwitchToMutable = async () => {
-    const { data } = await judgeHasPermission(stores.ruleId);
+  const onSwitchToMutable = () => {
+    judgeHasPermission(stores.ruleId).then(
+      () => {
+        switchs();
+      },
+      ({ data }) => {
+        message.error(data.errorMsg);
+      }
+    );
 
-    if (data?.resultCode !== '00000')
-      return message.error('有用户正在编辑规则，无法再次进行编辑');
-
-    if (stores.hasDraft === 'true') {
-      ConfirmModal({
-        title: '编辑提示',
-        content: '已有规则草稿，是否前往编辑？',
-        onOk: () => {
-          setStores({ ...stores, mode: 'mutable', ruleType: '3' });
-          setTimeout(
-            () =>
-              getTreeQuery.mutate({
-                ruleId: stores.ruleId,
-                ruleVersion: stores.version,
-                ruleType: stores.ruleType
-              }),
-            10
-          );
-        }
-      });
-    } else {
-      judgeHasDraftMutation.mutate(stores.ruleId);
+    function switchs() {
+      if (stores.hasDraft === 'true') {
+        ConfirmModal({
+          title: '编辑提示',
+          content: '已有规则草稿，是否前往编辑？',
+          onOk: () => {
+            setStores({ ...stores, mode: 'mutable', ruleType: '3' });
+            setTimeout(
+              () =>
+                getTreeQuery.mutate({
+                  ruleId: stores.ruleId,
+                  ruleVersion: stores.version,
+                  ruleType: stores.ruleType
+                }),
+              10
+            );
+          }
+        });
+      } else {
+        judgeHasDraftMutation.mutate(stores.ruleId);
+      }
     }
   };
 
