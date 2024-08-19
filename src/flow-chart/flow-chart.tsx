@@ -20,14 +20,6 @@ import {
   levelColors,
   nodeTypeMapping,
   RootNode
-  // ruleId
-  // ruleName,
-  // version,
-  // ruleType,
-  // hasDraft,
-  // auditTime,
-  // mode,
-  // nodeId
 } from './utils';
 import type { OnFinishProps } from './components/sider-bar';
 import ConfirmModal from '@components/confirm-modal/confirm-modal';
@@ -35,7 +27,7 @@ import ConfirmModal from '@components/confirm-modal/confirm-modal';
 import {
   saveRuleDraft,
   auditRuleDraft,
-  getTreeData,
+  getRuleData,
   judgeHasDraft,
   judgeHasPermission,
   isCanOperation
@@ -89,16 +81,17 @@ function App() {
           ruleId
         });
       }
+      // () => this.window.removeEventListener('message', );
     });
 
     setStores({
       auditTime: '2024-08-18 16:30:57',
-      hasDraft: '2',
+      hasDraft: '3',
       mode: 'mutable',
-      ruleId: '7f53acf58b3f4a438328564083bc5cef',
-      ruleName: '888',
+      ruleId: 'c42c80278842491091334a3dc07ca53a',
+      ruleName: '今天的规则222',
       ruleType: '1',
-      version: 'V1.2',
+      version: 'V1.12',
       nodeId: 'undefined'
     });
   }, []);
@@ -106,9 +99,21 @@ function App() {
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 10);
-    if (stores.nodeId && stores.mode === 'check')
-      onLookRunningRule(stores.nodeId);
+    if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
   }, [edges, nodes]);
+
+  useEffect(() => {
+    console.log(selectedId, 'selectedId selectedId selectedId');
+    const nds = nodes.map((node) =>
+      node.id === selectedId
+        ? { ...node, select: SelectType.SELECT }
+        : {
+            ...node,
+            select: node.select === SelectType.SELECT ? SelectType.DEFAULT : node.select
+          }
+    );
+    setNodes(nds);
+  }, [selectedId]);
 
   useEffect(() => {
     selectNodes(
@@ -123,7 +128,7 @@ function App() {
   const judgeHasDraftMutation = useMutation(judgeHasDraft, {
     onSuccess(res) {
       setStores({ ...stores, mode: 'mutable', ruleType: '3' });
-      getTreeQuery.mutate({
+      getRuleDataMutation.mutate({
         ruleId: stores.ruleId,
         ruleVersion: stores.version,
         ruleType: stores.ruleType
@@ -131,12 +136,10 @@ function App() {
     }
   });
 
-  const getTreeQuery = useMutation(getTreeData, {
+  const getRuleDataMutation = useMutation(getRuleData, {
     onSuccess(res) {
       const data = res.data.data;
-      setNodes([
-        { ...nodes[0], data: { ...nodes[0].data, title: data.ruleName } }
-      ]);
+      setNodes([{ ...nodes[0], data: { ...nodes[0].data, title: data.ruleName } }]);
       if (data?.ruleDataJson && data?.ruleRelateJson) {
         setEdges(JSON.parse(data.ruleRelateJson));
         setNodes(JSON.parse(data.ruleDataJson));
@@ -149,7 +152,7 @@ function App() {
 
   useEffect(() => {
     if (stores.ruleId) {
-      getTreeQuery.mutate({
+      getRuleDataMutation.mutate({
         ruleId: stores.ruleId,
         ruleVersion: stores.version,
         ruleType: stores.ruleType
@@ -165,13 +168,9 @@ function App() {
         ...stores,
         ruleType,
         version: version?.[0] === 'V' ? version : stores.version,
-        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
-          .data.title
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0].data.title
       });
-      window.parent.postMessage(
-        { source: 'flow', data: { success: true } },
-        '*'
-      );
+      window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -186,13 +185,9 @@ function App() {
         ...stores,
         ruleType,
         version: version?.[0] === 'V' ? version : stores.version,
-        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0]
-          .data.title
+        ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0].data.title
       });
-      window.parent.postMessage(
-        { source: 'flow', data: { success: true } },
-        '*'
-      );
+      window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
       message.error(data.errorMsg);
@@ -205,8 +200,7 @@ function App() {
   const branchNum = nodes.filter((node) => node.data.type === 'branch').length;
   const selectedNode = nodes.find((node) => node.id === selectedId);
   const parentNode = nodes.find(
-    (node) =>
-      node.id === edges.find((edge) => edge.target === selectedId)?.source
+    (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
   );
 
   const onAddBranch = (type: NodeType) => {
@@ -218,8 +212,7 @@ function App() {
         !Number.isNaN(Number(node.id.split(`${selectedId}&`)[1]))
     );
     const last = filter[filter.length - 1];
-    const preNum =
-      last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
+    const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
 
     setNodes([
       ...nodes,
@@ -257,15 +250,11 @@ function App() {
     }
 
     selectNodes(
-      nodes
-        .filter((node) => node.data.title.includes(value))
-        .map((node) => node.id),
+      nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
       SelectType.DANGER
     );
     selectNodes(
-      nodes
-        .filter((node) => !node.data.title.includes(value))
-        .map((node) => node.id),
+      nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
       SelectType.DEFAULT
     );
   };
@@ -295,7 +284,7 @@ function App() {
             setStores({ ...stores, mode: 'mutable', ruleType: '3' });
             setTimeout(
               () =>
-                getTreeQuery.mutate({
+                getRuleDataMutation.mutate({
                   ruleId: stores.ruleId,
                   ruleVersion: stores.version,
                   ruleType: stores.ruleType
@@ -317,13 +306,11 @@ function App() {
     const selectedType = selectedNode?.data.type;
 
     if (selectedType === 'root') {
-      if (pasteType !== 'branch')
-        return message.error('根节点下只可以粘贴分支');
+      if (pasteType !== 'branch') return message.error('根节点下只可以粘贴分支');
     }
 
     if (selectedType === 'branch') {
-      if (pasteType !== 'pureNode')
-        return message.error('分支下只可以粘贴无判断节点');
+      if (pasteType !== 'pureNode') return message.error('分支下只可以粘贴无判断节点');
     }
 
     if (selectedType === 'pureNode' || selectedType === 'node') {
@@ -376,11 +363,16 @@ function App() {
   };
 
   const onSubmit = async (type: SubmitType) => {
+    const { data } = await getRuleData({
+      ruleId: stores.ruleId,
+      ruleVersion: stores.version,
+      ruleType: type === 'sava' ? '3' : '1'
+    });
+    const ruleData = data?.data?.ruleDataJson;
+
     const jsonNodes = JSON.stringify(nodes);
     // 接口返回的JSON数据格式和JSON.stringify的不一样
-    const jsonData = JSON.stringify(
-      JSON.parse(getTreeQuery.data?.data?.data?.ruleDataJson ?? '{}')
-    );
+    const jsonData = JSON.stringify(JSON.parse(ruleData ?? '{}'));
 
     if (jsonData === jsonNodes) {
       if (type === 'sava')
@@ -425,6 +417,7 @@ function App() {
         ruleRelate: edges,
         ruleData: nodes.map((node) => ({
           ...node,
+          select: undefined,
           data: {
             ...node.data,
             nodeName: node.data.title,
@@ -436,9 +429,7 @@ function App() {
       type === 'sava' && saveRuleMutation.mutate(payload);
 
       const edgs = edges.map((edg) => edg.source);
-      const ndss = nodes.filter(
-        (node) => !edgs.includes(node.id) && node.data.type !== 'tip'
-      );
+      const ndss = nodes.filter((node) => !edgs.includes(node.id) && node.data.type !== 'tip');
 
       if (type === 'audit' && ndss.length)
         return ConfirmModal({
@@ -460,9 +451,7 @@ function App() {
     if (step === 1) {
       setNodes(
         nodes.map((node) => {
-          return node.id === selectedId
-            ? { ...node, data: { ...node.data, title } }
-            : node;
+          return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
         })
       );
     }
@@ -503,11 +492,7 @@ function App() {
                   needJson: 'T',
                   title,
                   sourceResult: values.sourceResult,
-                  logo: values.sourceResult
-                    ? values.sourceResult === 'T'
-                      ? Yes
-                      : No
-                    : undefined,
+                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                   jsonData: {
                     ...values,
                     descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
@@ -531,11 +516,7 @@ function App() {
                 data: {
                   ...node.data,
                   title,
-                  logo: values.sourceResult
-                    ? values.sourceResult === 'T'
-                      ? Yes
-                      : No
-                    : undefined,
+                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                   sourceResult: values.sourceResult,
                   isWarnUse: values.isWarnUse,
                   warnContent: values,
@@ -548,9 +529,7 @@ function App() {
                 style: {
                   background:
                     // @ts-ignore
-                    values.isWarnUse === 'F'
-                      ? levelColors.disabled
-                      : levelColors[values.warnLevel]
+                    values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
                 }
               }
             : node;
@@ -561,7 +540,7 @@ function App() {
 
   return (
     <div className='h-full'>
-      <Spin tip='加载中...' spinning={getTreeQuery.isLoading}>
+      <Spin tip='加载中...' spinning={getRuleDataMutation.isLoading}>
         <HeaderBar
           selectedNode={selectedNode}
           onSwitchToMutable={onSwitchToMutable}
@@ -582,12 +561,12 @@ function App() {
                 nodes={nodes}
                 edges={edges}
                 onNodeClick={(e, node) => {
-                  stores.mode === 'mutable' &&
-                    setSelectedId((pre) => {
-                      selectNode(pre, SelectType.DEFAULT);
-                      selectNode(node.id, SelectType.SELECT);
-                      return node.id;
-                    });
+                  stores.mode === 'mutable' && setSelectedId(node.id);
+                  // setSelectedId((pre) => {
+                  //   // selectNode(pre, SelectType.DEFAULT);
+                  //   // selectNode(node.id, SelectType.SELECT);
+                  //   return node.id;
+                  // });
                 }}
               />
             )}
@@ -595,11 +574,7 @@ function App() {
           {stores.mode === 'mutable' && (
             <div className='w-72 p-2 overflow-y-auto relative'>
               {/* @ts-ignore */}
-              <SiderBar
-                onFinish={onFinish}
-                selectedNode={selectedNode}
-                parentNode={parentNode}
-              />
+              <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
             </div>
           )}
         </div>

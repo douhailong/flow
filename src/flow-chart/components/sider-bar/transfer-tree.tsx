@@ -67,9 +67,11 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
                 checkedKeys={checkedKeys}
                 treeData={generateTree(dataSource, targetKeys)}
                 onCheck={(_, { node: { key } }) => {
+                  console.log('aaaaaaaaa', key);
                   onItemSelect(key as string, !isChecked(checkedKeys, key));
                 }}
                 onSelect={(_, { node: { key } }) => {
+                  console.log('bbbbbbb');
                   onItemSelect(key as string, !isChecked(checkedKeys, key));
                 }}
               />

@@ -1,11 +1,11 @@
-import type { FlowViewNode } from '@ant-design/pro-flow';
+import { SelectType, type FlowViewNode } from '@ant-design/pro-flow';
 
 export const nodeColors = {
   root: '#40a9ff',
   branch: '#95de64',
   node: '#d9f7be',
   pureNode: '#d9f7be',
-  tip: '#ffd6e7'
+  tip: '#ffe58f'
 } as const;
 
 export const levelColors = {
@@ -40,6 +40,7 @@ export function RootNode(title: string): FlowViewNode[] {
   return [
     {
       id: 'root',
+      select: SelectType.SELECT,
       data: {
         title,
         type: 'root'

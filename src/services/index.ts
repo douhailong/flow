@@ -58,7 +58,7 @@ export type GetTreeDataProps = {
   ruleVersion?: string;
 };
 
-export function getTreeData(data: GetTreeDataProps) {
+export function getRuleData(data: GetTreeDataProps) {
   return request<any>({
     method: 'post',
     url: '/recipehub/recipeRule/getRuleJsonData',
