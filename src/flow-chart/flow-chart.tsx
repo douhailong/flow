@@ -87,16 +87,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    setStores({
-      auditTime: '2024-08-18 16:30:57',
-      hasDraft: '3',
-      mode: 'mutable', //mutable
-      ruleId: 'c42c80278842491091334a3dc07ca53a',
-      ruleName: '今天的规则222',
-      ruleType: '1',
-      version: 'V1.24',
-      nodeId: 'root&1&1&2'
-    });
+    // setStores({
+    //   auditTime: '2024-08-18 16:30:57',
+    //   hasDraft: '3',
+    //   mode: 'mutable', //mutable
+    //   ruleId: 'c42c80278842491091334a3dc07ca53a',
+    //   ruleName: '今天的规则222',
+    //   ruleType: '1',
+    //   version: 'V1.24',
+    //   nodeId: 'root&1&1&2'
+    // });
   }, []);
 
   useEffect(() => {
@@ -436,7 +436,7 @@ function App() {
         ruleRelate: edges,
         ruleData: nodes.map((node) => ({
           ...node,
-          select: undefined,
+          select: type === 'audit' ? undefined : node.select,
           data: {
             ...node.data,
             nodeName: node.data.title,
