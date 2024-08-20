@@ -20,6 +20,7 @@ const SiderBar: React.FC<SiderBarProps> = (props) => {
 
   return (
     <div className='h-full'>
+      {!type && <div className='text-center text-gray-400'>请选择节点</div>}
       {['branch', 'root'].includes(type) && (
         <Step1 {...props} prefix={type === 'root' ? '规则' : '分支'} />
       )}

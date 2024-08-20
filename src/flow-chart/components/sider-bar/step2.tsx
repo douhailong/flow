@@ -36,11 +36,7 @@ import {
 import { getCategorys, getDrugs, type GetCategory } from '@services';
 import clsx from 'clsx';
 
-const Step2: React.FC<SiderBarProps> = ({
-  selectedNode,
-  parentNode,
-  onFinish
-}) => {
+const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
   const [flatDiseaseOpts, setFlatDiseaseOpts] = useState<Option[]>([]);
   const [resultOpts, serResultOpts] = useState<Option[]>([]);
@@ -49,9 +45,7 @@ const Step2: React.FC<SiderBarProps> = ({
   const [categoryType, setCategoryType] = useState<CategoryType>('default');
   const [relationType, setRelationType] = useState<RelationType>('in');
   const [operationType, setOperationType] = useState<'dict' | 'word'>('dict');
-  const [operationTypes, setOperationTypes] = useState<
-    ('num' | 'dayCeil' | 'ceil')[]
-  >(['num']);
+  const [operationTypes, setOperationTypes] = useState<('num' | 'dayCeil' | 'ceil')[]>(['num']);
   const [desc, setDesc] = useState('');
   const [isOpenTree, setIsOpenTree] = useState(false);
   const [isOpenTable, setIsOpenTable] = useState(false);
@@ -69,8 +63,7 @@ const Step2: React.FC<SiderBarProps> = ({
       onSuccess({ data }) {
         const opts = data.data
           .reduce(
-            (pre, cur) =>
-              cur.children ? [...pre, ...cur.children] : [...pre, cur],
+            (pre, cur) => (cur.children ? [...pre, ...cur.children] : [...pre, cur]),
             [] as GetCategory[]
           )
           .map(({ label, value }) => ({ label, value }));
@@ -155,13 +148,13 @@ const Step2: React.FC<SiderBarProps> = ({
       setDesc('');
       mutate('specialBoilType');
       form.resetFields();
+      setOperationType('dict');
       setRelationType('in');
+      setSelectedCategory('specialBoilType');
     }
     onSwitchCategoryType(form.getFieldValue('checkParam'));
     setRelationOpts(
-      form.getFieldValue('checkParam') === 'specialBoilType'
-        ? relationOpts2
-        : relationOpts1
+      form.getFieldValue('checkParam') === 'specialBoilType' ? relationOpts2 : relationOpts1
     );
   }, [selectedNode?.id]);
 
@@ -210,12 +203,9 @@ const Step2: React.FC<SiderBarProps> = ({
     if (values.checkParam === 'perDose') setCeilOpts(ceilOpts1);
     if (values.checkParam === 'dailyDose') setCeilOpts(ceilOpts2);
 
-    if (!changedValues.nums && !changedValues.ages)
-      form.resetFields(['ages', 'nums']);
+    if (!changedValues.nums && !changedValues.ages) form.resetFields(['ages', 'nums']);
 
-    const operats = form
-      .getFieldValue('nums')
-      ?.map((num: any) => num?.descParam ?? 'num');
+    const operats = form.getFieldValue('nums')?.map((num: any) => num?.descParam ?? 'num');
     setOperationTypes(operats || ['num']);
 
     if (values.checkParam === 'age') return;
@@ -284,26 +274,22 @@ const Step2: React.FC<SiderBarProps> = ({
             if (values.nums) {
               if (
                 values?.nums?.filter(
-                  (num: any) =>
-                    num.paramVal === null || num.paramVal === undefined
+                  (num: any) => num.paramVal === null || num.paramVal === undefined
                 ).length
               )
                 return message.error('请填写完整节点数据');
             } else if (values.ages) {
               if (
                 values?.ages?.filter(
-                  (age: any) =>
-                    age.paramVal === null || age.paramVal === undefined
+                  (age: any) => age.paramVal === null || age.paramVal === undefined
                 ).length
               )
                 return message.error('请填写完整节点数据');
             } else {
               if (
                 (!values.paramVal ||
-                  (Array.isArray(values.paramVal) &&
-                    values.paramVal.length === 0) ||
-                  (typeof values.paramVal === 'string' &&
-                    values.paramVal.trim() === '')) &&
+                  (Array.isArray(values.paramVal) && values.paramVal.length === 0) ||
+                  (typeof values.paramVal === 'string' && values.paramVal.trim() === '')) &&
                 values.connSign !== 'isnull'
               )
                 return message.error('请填写完整节点数据');
@@ -317,12 +303,8 @@ const Step2: React.FC<SiderBarProps> = ({
               return onFinish({ step: 2, values, title });
             }
 
-            if (
-              values.checkParam === 'perDose' ||
-              values.checkParam === 'dailyDose'
-            ) {
-              let title =
-                selectedCategory === 'perDose' ? '每次剂量' : '每天剂量';
+            if (values.checkParam === 'perDose' || values.checkParam === 'dailyDose') {
+              let title = selectedCategory === 'perDose' ? '每次剂量' : '每天剂量';
               values.nums.forEach((num: any) => {
                 title += ` ${!num.checkSign || num.checkSign === 'ignore' ? '' : descMapping[num.checkSign]} ${descMapping[num.connSign]} ${descMapping[num.descParam]} ${num.paramVal}${num.descParam === 'num' ? num.specialParam : '倍'}`;
               });
@@ -442,12 +424,10 @@ const Step2: React.FC<SiderBarProps> = ({
                 )}
               >
                 <Input
-                  placeholder='请选择'
+                  placeholder='请选择s'
                   onChange={() => undefined}
                   onClick={() =>
-                    selectedCategory === 'pathogen'
-                      ? setIsOpenTree(true)
-                      : setIsOpenTable(true)
+                    selectedCategory === 'pathogen' ? setIsOpenTree(true) : setIsOpenTable(true)
                   }
                   value={
                     form.getFieldValue('paramVal')?.length
@@ -467,12 +447,7 @@ const Step2: React.FC<SiderBarProps> = ({
                 {operationType === 'word' ? (
                   <Input placeholder='请输入' />
                 ) : (
-                  <Select
-                    allowClear
-                    mode='multiple'
-                    placeholder='请选择'
-                    options={resultOpts}
-                  />
+                  <Select allowClear mode='multiple' placeholder='请选择' options={resultOpts} />
                 )}
               </Form.Item>
             </Colation>
@@ -497,35 +472,21 @@ const Step2: React.FC<SiderBarProps> = ({
                     <Row gutter={12} key={key}>
                       {index !== 0 && (
                         <Col span={24}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'checkSign']}
-                            initialValue='and'
-                          >
+                          <Form.Item {...restField} name={[name, 'checkSign']} initialValue='and'>
                             <Select
                               options={logicOpts}
-                              onChange={(val) =>
-                                val === 'ignore' && remove(index)
-                              }
+                              onChange={(val) => val === 'ignore' && remove(index)}
                             />
                           </Form.Item>
                         </Col>
                       )}
                       <Col span={9}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'connSign']}
-                          initialValue='gt'
-                        >
+                        <Form.Item {...restField} name={[name, 'connSign']} initialValue='gt'>
                           <Select options={contrastOpts} />
                         </Form.Item>
                       </Col>
                       <Col span={15}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'descParam']}
-                          initialValue='num'
-                        >
+                        <Form.Item {...restField} name={[name, 'descParam']} initialValue='num'>
                           <Select options={ceilOpts} />
                         </Form.Item>
                       </Col>
@@ -599,44 +560,26 @@ const Step2: React.FC<SiderBarProps> = ({
                     <Row gutter={12} key={key}>
                       {index !== 0 && (
                         <Col span={24}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'checkSign']}
-                            initialValue='and'
-                          >
+                          <Form.Item {...restField} name={[name, 'checkSign']} initialValue='and'>
                             <Select
                               options={logicOpts}
-                              onChange={(val) =>
-                                val === 'ignore' && remove(index)
-                              }
+                              onChange={(val) => val === 'ignore' && remove(index)}
                             />
                           </Form.Item>
                         </Col>
                       )}
                       <Col span={9}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'connSign']}
-                          initialValue='gt'
-                        >
+                        <Form.Item {...restField} name={[name, 'connSign']} initialValue='gt'>
                           <Select options={contrastOpts} />
                         </Form.Item>
                       </Col>
                       <Col span={9}>
                         <Form.Item {...restField} name={[name, 'paramVal']}>
-                          <InputNumber
-                            precision={1}
-                            min={0}
-                            placeholder='请输入'
-                          />
+                          <InputNumber precision={1} min={0} placeholder='请输入' />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'specialParam']}
-                          initialValue='day'
-                        >
+                        <Form.Item {...restField} name={[name, 'specialParam']} initialValue='day'>
                           <Select options={timeOpts} />
                         </Form.Item>
                       </Col>
@@ -685,7 +628,6 @@ const ParentReslut = ({ title }: { title: string }) => (
 
 type ColationProps = { show: boolean; children: React.ReactNode };
 
-const Colation = ({ show, children }: ColationProps) =>
-  show ? children : null;
+const Colation = ({ show, children }: ColationProps) => (show ? children : null);
 
 export default Step2;

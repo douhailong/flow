@@ -41,8 +41,9 @@ function App() {
   const [copyNode, setCopyNode] = useState<FlowViewNode[]>([]);
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
   const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(''));
-  const [selectedId, setSelectedId] = useState<string>('root');
+  const [selectedId, setSelectedId] = useState<string>('');
   const [changedIds, setChangedIds] = useState<string[]>([]);
+  const [changedIds2, setChangedIds2] = useState<string[]>([]);
   const [show, setShow] = useState(true);
   const [stores, setStores] = useState({
     version: '',
@@ -56,6 +57,8 @@ function App() {
   });
 
   useEffect(() => {
+    window.parent.postMessage({ source: 'flow', data: { loadingCompleted: true } }, '*');
+
     window.addEventListener('message', function (e) {
       const data = e.data;
       if (data.source === 'parentWindow') {
@@ -87,12 +90,12 @@ function App() {
     setStores({
       auditTime: '2024-08-18 16:30:57',
       hasDraft: '3',
-      mode: 'mutable',
+      mode: 'mutable', //mutable
       ruleId: 'c42c80278842491091334a3dc07ca53a',
       ruleName: '今天的规则222',
       ruleType: '1',
-      version: 'V1.12',
-      nodeId: 'undefined'
+      version: 'V1.24',
+      nodeId: 'root&1&1&2'
     });
   }, []);
 
@@ -103,17 +106,30 @@ function App() {
   }, [edges, nodes]);
 
   useEffect(() => {
-    console.log(selectedId, 'selectedId selectedId selectedId');
     const nds = nodes.map((node) =>
       node.id === selectedId
         ? { ...node, select: SelectType.SELECT }
         : {
             ...node,
-            select: node.select === SelectType.SELECT ? SelectType.DEFAULT : node.select
+            select:
+              node.select === SelectType.SELECT
+                ? changedIds2.includes(node.id)
+                  ? SelectType.SUB_DANGER
+                  : SelectType.DEFAULT
+                : node.id === selectedId
+                  ? SelectType.SELECT
+                  : node.select
           }
     );
     setNodes(nds);
   }, [selectedId]);
+
+  useEffect(() => {
+    const nds = nodes.map((node) =>
+      changedIds2.includes(node.id) ? { ...node, select: SelectType.SUB_DANGER } : node
+    );
+    setNodes(nds);
+  }, [changedIds2]);
 
   useEffect(() => {
     selectNodes(
@@ -170,6 +186,7 @@ function App() {
         version: version?.[0] === 'V' ? version : stores.version,
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0].data.title
       });
+      setChangedIds2([]);
       window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
@@ -187,6 +204,7 @@ function App() {
         version: version?.[0] === 'V' ? version : stores.version,
         ruleName: nodes.filter((item: FlowViewNode) => item.id === 'root')?.[0].data.title
       });
+      setChangedIds2([]);
       window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
@@ -213,6 +231,8 @@ function App() {
     );
     const last = filter[filter.length - 1];
     const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
+
+    setChangedIds2([...new Set([...changedIds2, `${selectedId}&${preNum + 1}`])]);
 
     setNodes([
       ...nodes,
@@ -299,7 +319,7 @@ function App() {
     }
   };
 
-  // TODO
+  // TODOfor (le
   const onPaste = () => {
     if (!copyNode.length) return message.error('请先复制节点');
     const pasteType = copyNode[0]?.data.type;
@@ -353,7 +373,6 @@ function App() {
           curWarns.includes(curNode.id) &&
           !result.includes(curNode.id) &&
           curNode.id !== 'root' &&
-          // curNode.data.isWarnUse !== 'F'
           (warn ? true : curNode.data.isWarnUse !== 'F')
         )
           result.push(curNode.id);
@@ -448,12 +467,16 @@ function App() {
   };
 
   const onFinish = ({ step, values, title }: OnFinishProps) => {
+    let nds: FlowViewNode[] = [];
     if (step === 1) {
-      setNodes(
-        nodes.map((node) => {
-          return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
-        })
-      );
+      nds = nodes.map((node) => {
+        return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
+      });
+      // setNodes(
+      //   nodes.map((node) => {
+      //     return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
+      //   })
+      // );
     }
 
     if (step === 2) {
@@ -481,61 +504,152 @@ function App() {
           });
         }
       }
-
-      setNodes(
-        nodes.map((node) => {
-          return node.id === selectedId
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  needJson: 'T',
-                  title,
-                  sourceResult: values.sourceResult,
-                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-                  jsonData: {
-                    ...values,
-                    descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
-                  },
-                  checkParam: values.checkParam,
-                  descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
-                  specialJsonData: specialJsonData()
-                }
+      nds = nodes.map((node) => {
+        return node.id === selectedId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                needJson: 'T',
+                title,
+                sourceResult: values.sourceResult,
+                logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                jsonData: {
+                  ...values,
+                  descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
+                },
+                checkParam: values.checkParam,
+                descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
+                specialJsonData: specialJsonData()
               }
-            : node;
-        })
-      );
+            }
+          : node;
+      });
+
+      // setNodes(
+      //   nodes.map((node) => {
+      //     return node.id === selectedId
+      //       ? {
+      //           ...node,
+      //           data: {
+      //             ...node.data,
+      //             needJson: 'T',
+      //             title,
+      //             sourceResult: values.sourceResult,
+      //             logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+      //             jsonData: {
+      //               ...values,
+      //               descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
+      //             },
+      //             checkParam: values.checkParam,
+      //             descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
+      //             specialJsonData: specialJsonData()
+      //           }
+      //         }
+      //       : node;
+      //   })
+      // );
     }
 
     if (step === 3) {
-      setNodes(
-        nodes.map((node) => {
-          return node.id === selectedId
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  title,
-                  logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-                  sourceResult: values.sourceResult,
-                  isWarnUse: values.isWarnUse,
-                  warnContent: values,
-                  warnLevel: values.warnLevel,
-                  titleSlot: {
-                    type: 'right',
-                    value: values.isWarnUse === 'F' ? '✘' : '✔'
-                  }
-                },
-                style: {
-                  background:
-                    // @ts-ignore
-                    values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
+      nds = nodes.map((node) => {
+        return node.id === selectedId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                title,
+                logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+                sourceResult: values.sourceResult,
+                isWarnUse: values.isWarnUse,
+                warnContent: values,
+                warnLevel: values.warnLevel,
+                titleSlot: {
+                  type: 'right',
+                  value: values.isWarnUse === 'F' ? '✘' : '✔'
                 }
+              },
+              style: {
+                background:
+                  // @ts-ignore
+                  values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
               }
-            : node;
-        })
-      );
+            }
+          : node;
+      });
+      // setNodes(
+      //   nodes.map((node) => {
+      //     return node.id === selectedId
+      //       ? {
+      //           ...node,
+      //           data: {
+      //             ...node.data,
+      //             title,
+      //             logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
+      //             sourceResult: values.sourceResult,
+      //             isWarnUse: values.isWarnUse,
+      //             warnContent: values,
+      //             warnLevel: values.warnLevel,
+      //             titleSlot: {
+      //               type: 'right',
+      //               value: values.isWarnUse === 'F' ? '✘' : '✔'
+      //             }
+      //           },
+      //           style: {
+      //             background:
+      //               // @ts-ignore
+      //               values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
+      //           }
+      //         }
+      //       : node;
+      //   })
+      // );
     }
+
+    const disTipIds = nds
+      .filter((node) => node.data.type === 'tip' && node.data.isWarnUse === 'F')
+      .map((node) => node.id);
+
+    let result: string[] = [...disTipIds];
+    function getDisabled(diseds: string[]) {
+      if (!diseds.length) return;
+      for (let i = 0; i < edges.length; i++) {
+        const curEdg = edges[i];
+        if (diseds.includes(curEdg.target)) {
+          const preId = edges.find((edge) => edge.target === curEdg.target)?.source;
+          if (preId) {
+            const es = edges.filter((edge) => edge.source === preId);
+            const validEs = es.filter((edge) => result.includes(edge.target));
+            if (es.length === validEs.length) {
+              result.push(preId);
+              getDisabled([preId]);
+            }
+          }
+        }
+      }
+    }
+    getDisabled(disTipIds);
+    const nds1 = nds.map((node) => {
+      const type = node.data.type as NodeType;
+      return result.includes(node.id)
+        ? { ...node, style: { background: '#f0f0f0' } }
+        : {
+            ...node,
+            style: {
+              background:
+                type === 'tip'
+                  ? node.data.isWarnUse === 'F'
+                    ? levelColors.disabled
+                    : // @ts-ignore
+                      levelColors[node.data.warnLevel]
+                  : nodeColors[type]
+            }
+          };
+    });
+
+    setChangedIds2([...new Set([...changedIds2, selectedId])]);
+    setNodes(nds1);
+    result = [];
   };
 
   return (
@@ -562,11 +676,6 @@ function App() {
                 edges={edges}
                 onNodeClick={(e, node) => {
                   stores.mode === 'mutable' && setSelectedId(node.id);
-                  // setSelectedId((pre) => {
-                  //   // selectNode(pre, SelectType.DEFAULT);
-                  //   // selectNode(node.id, SelectType.SELECT);
-                  //   return node.id;
-                  // });
                 }}
               />
             )}

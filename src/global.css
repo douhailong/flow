@@ -56,8 +56,9 @@ button[disabled] {
 
 .ant-xx .img {
   opacity: 0;
-  width: 14px !important;
-  height: 14px !important;
+  margin-top: 16px;
+  width: 24px !important;
+  height: 24px !important;
 }
 
 .ant-xx .img[src] {
@@ -80,15 +81,20 @@ button[disabled] {
 }
 
 .ant-xx .title > div :last-child {
-  border: 1px solid #1677ff;
+  border: 3px solid #1677ff;
   border-radius: 9999px;
-  width: 14px;
-  height: 14px;
+  width: 19px;
+  height: 19px;
   text-align: center;
-  line-height: 14px;
-  font-size: 10px;
+  line-height: 19px;
+  font-size: 14px;
+  font-weight: 800;
   color: #1677ff;
-  top: 33px;
+  top: 29px;
+}
+
+.ant-xx .title > span {
+  /* color: red !important; */
 }
 
 .ant-form-item {
