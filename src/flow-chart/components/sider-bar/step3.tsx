@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Select, Row, Col, Radio } from 'antd';
 import { FlowViewNode } from '@ant-design/pro-flow';
 import type { SiderBarProps } from './index';
+import { Option } from './utils';
+import { getCategorys, getInUseWarnLevels } from '@services/index';
+import { useQuery } from 'react-query';
 
 const levelOptons = [
   { value: 1, label: '1级' },
@@ -17,6 +20,8 @@ const options = [
 ];
 
 const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
+  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
+  const [levelOpts, setLevelOpts] = useState<Option[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -24,6 +29,23 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       ? form.setFieldsValue(selectedNode?.data.warnContent)
       : form.resetFields();
   }, [selectedNode?.id]);
+
+  const {} = useQuery(['getCategorys'], () => getCategorys('recipeWarnType'), {
+    onSuccess(res) {
+      setTypeOpts(res.data.data.map(({ label, value }) => ({ label, value })));
+    }
+  });
+
+  const { data } = useQuery(['getInUseWarnLevels'], () => getInUseWarnLevels(), {
+    onSuccess(res) {
+      setLevelOpts(
+        res.data.data.map(({ levelName, warnLevel, warnColor }: any) => ({
+          label: levelName,
+          value: warnLevel
+        }))
+      );
+    }
+  });
 
   return (
     <div>
@@ -39,7 +61,11 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         onFinish={(values) => {
           const title = `${arr[form.getFieldValue('warnLevel') - 1]} ${form.getFieldValue('warnContent')}\n建议：${form.getFieldValue('suggestion')}`;
 
-          onFinish({ step: 3, values, title });
+          const color = data?.data?.data.find(
+            (item: any) => item.warnLevel === values.warnLevel
+          )?.warnColor;
+
+          onFinish({ step: 3, values: { ...values, color }, title });
         }}
       >
         <Form.Item name='sourceResult' noStyle initialValue='T'>
@@ -55,14 +81,21 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         <div className='text-sm text-gray-600 mb-2'>则进入下一步</div>
 
         <div className='mb-2'>警示设置：</div>
+        <div className='text-xs mb-2'>警示类别</div>
+        <Form.Item name='warnTypeCodeVal' initialValue='配伍禁忌'>
+          <Select options={typeOpts} />
+        </Form.Item>
         <div className='text-xs mb-2'>警示等级</div>
         <Row gutter={12}>
-          <Col span={8}>
-            <Form.Item name='warnLevel' initialValue={1}>
-              <Select placeholder='请选择' options={levelOptons} />
+          <Col span={11}>
+            <Form.Item
+              name='warnLevel'
+              initialValue={levelOpts.length ? levelOpts[0].value : undefined}
+            >
+              <Select placeholder='请选择' options={levelOpts} />
             </Form.Item>
           </Col>
-          <Col span={16}>
+          <Col span={13}>
             <Form.Item name='warnParam' initialValue='name'>
               <Select
                 placeholder='请选择'

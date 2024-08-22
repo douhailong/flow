@@ -9,9 +9,10 @@ export const nodeColors = {
 } as const;
 
 export const levelColors = {
-  1: '#ffe58f',
-  2: '#ffe58f',
-  3: '#ffd6e7',
+  green: '#16a34a',
+  blue: '#0ea5e9',
+  yellow: '#ffe58f',
+  red: '#fbcfe8',
   disabled: '#f0f0f0'
 } as const;
 

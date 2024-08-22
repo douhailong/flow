@@ -21,6 +21,7 @@ export function getCategorys(
     | 'belong'
     | 'pathogen'
     | 'toxicPieces'
+    | 'recipeWarnType'
 ) {
   return request<GetCategorys>({
     method: 'post',
@@ -100,5 +101,12 @@ export function isCanOperation(ruleId: string) {
   return request<any>({
     method: 'post',
     url: `/recipehub/recipeRuleDraft/saveDraftCheck?ruleId=${ruleId}`
+  });
+}
+
+export function getInUseWarnLevels() {
+  return request<any>({
+    method: 'post',
+    url: `/recipehub/recipeRule/getInUseWarnLevels`
   });
 }

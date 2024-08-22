@@ -91,10 +91,10 @@ function App() {
     //   auditTime: '2024-08-18 16:30:57',
     //   hasDraft: '3',
     //   mode: 'mutable', //mutable
-    //   ruleId: 'c42c80278842491091334a3dc07ca53a',
-    //   ruleName: '今天的规则222',
+    //   ruleId: '6939906fb7cd4888bcda36ff84122087',
+    //   ruleName: '规则ces1',
     //   ruleType: '1',
-    //   version: 'V1.24',
+    //   version: 'V1.93',
     //   nodeId: 'root&1&1&2'
     // });
   }, []);
@@ -472,11 +472,6 @@ function App() {
       nds = nodes.map((node) => {
         return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
       });
-      // setNodes(
-      //   nodes.map((node) => {
-      //     return node.id === selectedId ? { ...node, data: { ...node.data, title } } : node;
-      //   })
-      // );
     }
 
     if (step === 2) {
@@ -525,30 +520,6 @@ function App() {
             }
           : node;
       });
-
-      // setNodes(
-      //   nodes.map((node) => {
-      //     return node.id === selectedId
-      //       ? {
-      //           ...node,
-      //           data: {
-      //             ...node.data,
-      //             needJson: 'T',
-      //             title,
-      //             sourceResult: values.sourceResult,
-      //             logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-      //             jsonData: {
-      //               ...values,
-      //               descParam: Array.isArray(values.paramVal) ? 'dict' : 'word'
-      //             },
-      //             checkParam: values.checkParam,
-      //             descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
-      //             specialJsonData: specialJsonData()
-      //           }
-      //         }
-      //       : node;
-      //   })
-      // );
     }
 
     if (step === 3) {
@@ -562,7 +533,9 @@ function App() {
                 logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
                 sourceResult: values.sourceResult,
                 isWarnUse: values.isWarnUse,
+                ...values,
                 warnContent: values,
+                warnInfo: values.warnContent,
                 warnLevel: values.warnLevel,
                 titleSlot: {
                   type: 'right',
@@ -572,38 +545,11 @@ function App() {
               style: {
                 background:
                   // @ts-ignore
-                  values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
+                  values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.color]
               }
             }
           : node;
       });
-      // setNodes(
-      //   nodes.map((node) => {
-      //     return node.id === selectedId
-      //       ? {
-      //           ...node,
-      //           data: {
-      //             ...node.data,
-      //             title,
-      //             logo: values.sourceResult ? (values.sourceResult === 'T' ? Yes : No) : undefined,
-      //             sourceResult: values.sourceResult,
-      //             isWarnUse: values.isWarnUse,
-      //             warnContent: values,
-      //             warnLevel: values.warnLevel,
-      //             titleSlot: {
-      //               type: 'right',
-      //               value: values.isWarnUse === 'F' ? '✘' : '✔'
-      //             }
-      //           },
-      //           style: {
-      //             background:
-      //               // @ts-ignore
-      //               values.isWarnUse === 'F' ? levelColors.disabled : levelColors[values.warnLevel]
-      //           }
-      //         }
-      //       : node;
-      //   })
-      // );
     }
 
     const disTipIds = nds
@@ -641,7 +587,7 @@ function App() {
                   ? node.data.isWarnUse === 'F'
                     ? levelColors.disabled
                     : // @ts-ignore
-                      levelColors[node.data.warnLevel]
+                      levelColors[node.data.color]
                   : nodeColors[type]
             }
           };
