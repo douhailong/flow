@@ -6,14 +6,6 @@ import { Option } from './utils';
 import { getCategorys, getInUseWarnLevels } from '@services/index';
 import { useQuery } from 'react-query';
 
-const levelOptons = [
-  { value: 1, label: '1级' },
-  { value: 2, label: '2级' },
-  { value: 3, label: '3级' }
-];
-
-const arr = ['1级', '2级', '3级'];
-
 const options = [
   { value: 'name', label: '药品·名称' }
   // { value: 'minDose', label: '最小可分剂量' }
@@ -59,7 +51,7 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         clearOnDestroy
         form={form}
         onFinish={(values) => {
-          const title = `${arr[form.getFieldValue('warnLevel') - 1]} ${form.getFieldValue('warnContent')}\n建议：${form.getFieldValue('suggestion')}`;
+          const title = `${values.warnTypeCodeVal} ${levelOpts.find((lev) => values.warnLevel === lev.value)?.label} ${values.warnContent}\n建议：${values.suggestion}`;
 
           const color = data?.data?.data.find(
             (item: any) => item.warnLevel === values.warnLevel

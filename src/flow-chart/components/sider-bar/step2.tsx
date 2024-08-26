@@ -35,6 +35,7 @@ import {
 } from './utils';
 import { getCategorys, getDrugs, type GetCategory } from '@services';
 import clsx from 'clsx';
+import { validAges } from './valid-ages';
 
 const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
@@ -271,6 +272,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           clearOnDestroy
           form={form}
           onFinish={(values) => {
+            // const a = validAges(values.ages);
+            // console.log(a, 'VVVVVVVVVVVVVVVVVVVVV');
+            // return;
             if (values.nums) {
               if (
                 values?.nums?.filter(
@@ -424,7 +428,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                 )}
               >
                 <Input
-                  placeholder='请选择s'
+                  placeholder='请选择'
                   onChange={() => undefined}
                   onClick={() =>
                     selectedCategory === 'pathogen' ? setIsOpenTree(true) : setIsOpenTable(true)
