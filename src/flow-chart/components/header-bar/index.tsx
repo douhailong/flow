@@ -6,14 +6,14 @@ import type { NodeType } from '../../utils';
 
 import Copy from '@assets/copy.png';
 import Branch from '@assets/branch.png';
-import Audit from '@assets/approve.png';
+import Audit from '@assets/audit.png';
 import Delete from '@assets/delete.png';
 import Save from '@assets/save.png';
 import Paste from '@assets/paste.png';
 import Redo from '@assets/redo.png';
 import Undo from '@assets/undo.png';
-import Share from '@assets/share1.png';
-import Tip from '@assets/tip1.png';
+import Share from '@assets/share.png';
+import Tip from '@assets/tip.png';
 import Running from '@assets/running.png';
 import Edit from '@assets/edit.png';
 
