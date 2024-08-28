@@ -371,7 +371,11 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           </Form.Item>
           <Colation show={categoryType === 'default'}>
             <Colation
-              show={selectedCategory !== 'toxicPieces' && selectedCategory !== 'doubleSign'}
+              show={
+                selectedCategory !== 'toxicPieces' &&
+                selectedCategory !== 'doubleSign' &&
+                selectedCategory !== 'pregnantSign'
+              }
             >
               <Row gutter={12}>
                 <Col span={12}>
