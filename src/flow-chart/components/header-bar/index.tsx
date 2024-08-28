@@ -131,7 +131,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
               />
               <span>粘贴</span>
             </button>
-            <button
+            {/* <button
               className='text-xs flex flex-col items-center'
               onClick={() => message.info('暂未开放')}
             >
@@ -144,7 +144,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             >
               <img width={24} height={24} src={Redo} />
               <span>恢复</span>
-            </button>
+            </button> */}
             <button
               className='text-xs flex flex-col items-center'
               disabled={selectedNode?.id === 'root' || !selectedNode?.id}
