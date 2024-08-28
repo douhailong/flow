@@ -370,7 +370,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             <Select options={categoryOpts} />
           </Form.Item>
           <Colation show={categoryType === 'default'}>
-            <Colation show={selectedCategory !== 'toxicPieces'}>
+            <Colation
+              show={selectedCategory !== 'toxicPieces' && selectedCategory !== 'doubleSign'}
+            >
               <Row gutter={12}>
                 <Col span={12}>
                   <Form.Item name='connSign' initialValue='in'>
