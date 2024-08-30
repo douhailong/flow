@@ -87,16 +87,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    setStores({
-      auditTime: '2024-08-18 16:30:57',
-      hasDraft: '3',
-      mode: 'mutable', //mutable
-      ruleId: '327b145cebaf43eaac6cac7eeb0dedbc',
-      ruleName: '111别用111',
-      ruleType: '1',
-      version: 'V1.2',
-      nodeId: 'root&1&1&2'
-    });
+    // setStores({
+    //   auditTime: '2024-08-18 16:30:57',
+    //   hasDraft: '3',
+    //   mode: 'mutable', //mutable
+    //   ruleId: '327b145cebaf43eaac6cac7eeb0dedbc',
+    //   ruleName: '111别用111',
+    //   ruleType: '1',
+    //   version: 'V1.2',
+    //   nodeId: 'root&1&1&2'
+    // });
   }, []);
 
   useEffect(() => {
@@ -515,7 +515,8 @@ function App() {
                 },
                 checkParam: values.checkParam,
                 descParam: Array.isArray(values.paramVal) ? 'dict' : 'word',
-                specialJsonData: specialJsonData()
+                specialJsonData: specialJsonData(),
+                medNameFilterType: values.medNameFilterType
               }
             }
           : node;

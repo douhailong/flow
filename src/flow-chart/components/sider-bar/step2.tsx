@@ -37,6 +37,11 @@ import { getCategorys, getDrugs, type GetCategory } from '@services';
 import clsx from 'clsx';
 import { validAges } from './valid-ages';
 
+const opts1: Option[] = [
+  { label: '筛选后药品', value: '1' },
+  { label: '全部药品', value: '2' }
+];
+
 const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
   const [flatDiseaseOpts, setFlatDiseaseOpts] = useState<Option[]>([]);
@@ -212,6 +217,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
     if (values.checkParam === 'age') return;
     if (values.checkParam === 'perDose') return;
     if (values.checkParam === 'dailyDose') return;
+    if (changedValues.medNameFilterType) return;
 
     // 重置当前修改Form.Item后面的值
     const curKey = Object.keys(changedValues)?.[0];
@@ -273,7 +279,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           form={form}
           onFinish={(values) => {
             // const a = validAges(values.ages);
-            // console.log(a, 'VVVVVVVVVVVVVVVVVVVVV');
+            console.log(values, 'VVVVVVVVVVVVVVVVVVVVV');
             // return;
             if (values.nums) {
               if (
@@ -318,13 +324,18 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             const paramVal = values.paramVal;
             const desc1 = descMapping[values.checkParam];
             const desc2 = descMapping[values.connSign] ?? '';
+            const desc4 = values.medNameFilterType
+              ? values.medNameFilterType === '1'
+                ? '筛选后药品'
+                : '全部药品'
+              : '';
             const desc3 =
               (Array.isArray(paramVal)
                 ? paramVal.map((i) => descMapping[i]).join('，')
                 : relationType === 'eq'
                   ? descMapping[paramVal]
                   : paramVal) ?? '';
-            const describe = `${desc1} ${desc2} ${desc3}`;
+            const describe = `${desc1} ${desc2} ${desc3} ${desc4}`;
             setDesc(describe);
 
             if (selectedCategory === 'pathogen') {
@@ -446,6 +457,11 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                   }
                 />
               </Form.Item>
+              {selectedCategory === 'medicineName' && (
+                <Form.Item name='medNameFilterType' initialValue='1'>
+                  <Select options={opts1} />
+                </Form.Item>
+              )}
               <Form.Item
                 name='paramVal'
                 className={clsx(
