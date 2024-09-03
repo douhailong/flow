@@ -22,6 +22,11 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
       : form.resetFields();
   }, [selectedNode?.id]);
 
+  useEffect(() => {
+    const lev = form.getFieldValue('warnLevel');
+    !lev && form.setFieldValue('warnLevel', levelOpts?.[0]?.value);
+  }, [levelOpts]);
+
   const {} = useQuery(['getCategorys'], () => getCategorys('recipeWarnType'), {
     onSuccess(res) {
       setTypeOpts(res.data.data.map(({ label, value }) => ({ label, value })));

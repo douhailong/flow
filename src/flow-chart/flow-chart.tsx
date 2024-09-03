@@ -30,7 +30,8 @@ import {
   getRuleData,
   judgeHasDraft,
   judgeHasPermission,
-  isCanOperation
+  isCanOperation,
+  renewal
 } from '@services';
 import { useMutation, useQuery } from 'react-query';
 
@@ -91,10 +92,10 @@ function App() {
     //   auditTime: '2024-08-18 16:30:57',
     //   hasDraft: '3',
     //   mode: 'mutable', //mutable
-    //   ruleId: '327b145cebaf43eaac6cac7eeb0dedbc',
-    //   ruleName: '111别用111',
+    //   ruleId: 'db68bf3c4675445ca62fa152288d9f98',
+    //   ruleName: '妊娠禁忌',
     //   ruleType: '1',
-    //   version: 'V1.2',
+    //   version: 'V1.5',
     //   nodeId: 'root&1&1&2'
     // });
   }, []);
@@ -104,6 +105,13 @@ function App() {
     setTimeout(() => setShow(true), 10);
     if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
   }, [edges, nodes]);
+
+  useEffect(() => {
+    const nds = nodes.map((node) =>
+      changedIds2.includes(node.id) ? { ...node, select: SelectType.SUB_DANGER } : node
+    );
+    setNodes(nds);
+  }, [changedIds2]);
 
   useEffect(() => {
     const nds = nodes.map((node) =>
@@ -122,14 +130,11 @@ function App() {
           }
     );
     setNodes(nds);
+    stores.ruleId &&
+      renewal(stores.ruleId).catch((err) => {
+        message.error(err?.data?.errorMsg);
+      });
   }, [selectedId]);
-
-  useEffect(() => {
-    const nds = nodes.map((node) =>
-      changedIds2.includes(node.id) ? { ...node, select: SelectType.SUB_DANGER } : node
-    );
-    setNodes(nds);
-  }, [changedIds2]);
 
   useEffect(() => {
     selectNodes(
@@ -233,6 +238,7 @@ function App() {
     const preNum = last === undefined ? 0 : Number(last.id.split(`${selectedId}&`)[1]);
 
     setChangedIds2([...new Set([...changedIds2, `${selectedId}&${preNum + 1}`])]);
+    setSelectedId(`${selectedId}&${preNum + 1}`);
 
     setNodes([
       ...nodes,
@@ -319,7 +325,7 @@ function App() {
     }
   };
 
-  // TODOfor (le
+  // TODO
   const onPaste = () => {
     if (!copyNode.length) return message.error('请先复制节点');
     const pasteType = copyNode[0]?.data.type;

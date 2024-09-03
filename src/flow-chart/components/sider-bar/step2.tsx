@@ -457,11 +457,6 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                   }
                 />
               </Form.Item>
-              {selectedCategory === 'medicineName' && (
-                <Form.Item name='medNameFilterType' initialValue='1'>
-                  <Select options={opts1} />
-                </Form.Item>
-              )}
               <Form.Item
                 name='paramVal'
                 className={clsx(
@@ -477,6 +472,11 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                 )}
               </Form.Item>
             </Colation>
+            {selectedCategory === 'medicineName' && (
+              <Form.Item name='medNameFilterType' initialValue='1'>
+                <Select options={opts1} />
+              </Form.Item>
+            )}
             <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2 break-words'>
               <div className='font-semibold'>整体判断描述：</div>
               {desc}

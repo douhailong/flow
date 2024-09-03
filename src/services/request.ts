@@ -1,8 +1,4 @@
-import axios, {
-  AxiosRequestConfig,
-  AxiosResponse,
-  InternalAxiosRequestConfig
-} from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import { apiBaseUrl } from '@config';
 import { message } from 'antd';
@@ -26,7 +22,7 @@ instance.interceptors.request.use(
         ...config.headers,
         Authorization:
           token ||
-          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzIzNjE4OTQxLCJpYXQiOjE3MjMwMTQxNDEsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.omgXuSLe9NmFzVeHbcurV7G_iuYvjkt0kCuUFX4rR7JGv_meeZAG2ipmHPl8L1DKG44L0DroSdhdFd4p8miGww'
+          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzI1OTQ2Mzc4LCJpYXQiOjE3MjUzNDE1NzgsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.b_Zlt43Tnywi-CV9LH_OKosbNGNmS5XD5dM2UKcYZtr_C7ZGZa8XJ059yZHsEiToEt3-ncq8w5JwXT0YSWsSEg'
       }
     } as InternalAxiosRequestConfig<any>;
   },

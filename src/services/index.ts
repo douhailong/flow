@@ -110,3 +110,10 @@ export function getInUseWarnLevels() {
     url: `/recipehub/recipeRule/getInUseWarnLevels`
   });
 }
+
+export function renewal(ruleId: string) {
+  return request<any>({
+    method: 'post',
+    url: `/recipehub/recipeRuleDraft/updateExpireTime?ruleId=${ruleId}`
+  });
+}
