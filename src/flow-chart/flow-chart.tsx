@@ -92,10 +92,10 @@ function App() {
     //   auditTime: '2024-08-18 16:30:57',
     //   hasDraft: '3',
     //   mode: 'mutable', //mutable
-    //   ruleId: 'db68bf3c4675445ca62fa152288d9f98',
-    //   ruleName: '妊娠禁忌',
+    //   ruleId: '980ebac64ef84da9b2acaf4a2207f0ee',
+    //   ruleName: '配伍禁忌',
     //   ruleType: '1',
-    //   version: 'V1.5',
+    //   version: 'V1.18',
     //   nodeId: 'root&1&1&2'
     // });
   }, []);
@@ -104,7 +104,7 @@ function App() {
     setShow(false);
     setTimeout(() => setShow(true), 10);
     if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
-  }, [edges, nodes]);
+  }, [edges]);
 
   useEffect(() => {
     const nds = nodes.map((node) =>
