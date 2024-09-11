@@ -1,8 +1,9 @@
-import { Input, message } from 'antd';
+import { Button, Input, message, Space } from 'antd';
 import clsx from 'clsx';
 import { Info, Trash2, CopyPlus, ClipboardPaste } from 'lucide-react';
 import { type FlowViewNode } from '@ant-design/pro-flow';
 import type { NodeType } from '../../utils';
+import { debounce } from 'lodash-es';
 
 import Copy from '@assets/copy.png';
 import Branch from '@assets/branch.png';
@@ -16,17 +17,19 @@ import Share from '@assets/share.png';
 import Tip from '@assets/tip.png';
 import Running from '@assets/running.png';
 import Edit from '@assets/edit.png';
+import { useState } from 'react';
 
 type HeaderBarProps = {
   selectedNode?: FlowViewNode;
   mode: string;
+  nodes: FlowViewNode[];
   onAddBranch: (type: NodeType) => void;
   onDelete: () => void;
   onCopy: () => void;
   onPaste: () => void;
   onSwitchToMutable: () => void;
   onLookRunningRule: (val?: string) => void;
-  onSearch: (value: string, clear?: boolean) => void;
+  onSearch: (resultId: string, clear?: boolean) => void;
   onSubmit: (type: 'sava' | 'audit') => void;
 };
 
@@ -40,8 +43,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onCopy,
   onPaste,
   onSubmit,
+  nodes,
   mode
 }) => {
+  const [curIndex, setCurIndex] = useState(0);
+  const [matchNds, setMatchNds] = useState<FlowViewNode[]>([]);
   const type = selectedNode?.data.type;
 
   const isTipDisaled = !['pureNode', 'node'].includes(type);
@@ -178,12 +184,45 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <div></div>
       )}
       <Input
-        className='w-64'
+        className='w-80'
         placeholder='请输入搜索内容'
-        onChange={(e) => {
-          const value = e.target.value?.trim();
-          value === '' ? onSearch(value, true) : onSearch(value);
-        }}
+        onChange={debounce((e: any) => {
+          const value = e.target.value.trim();
+          if (!value) {
+            setMatchNds([]);
+            setCurIndex(0);
+            onSearch('', true);
+            return;
+          }
+          const matNds = nodes.filter((node) => node.data.title.includes(value));
+          setMatchNds(matNds);
+          setCurIndex(0);
+          onSearch(matNds[0]?.id);
+        }, 300)}
+        suffix={
+          <Space>
+            <Button
+              size='small'
+              disabled={curIndex === 0}
+              onClick={() => {
+                setCurIndex(curIndex - 1);
+                onSearch(matchNds[curIndex - 1]?.id);
+              }}
+            >
+              上一个
+            </Button>
+            <Button
+              size='small'
+              disabled={curIndex === matchNds.length - 1 || !matchNds.length}
+              onClick={() => {
+                setCurIndex(curIndex + 1);
+                onSearch(matchNds[curIndex + 1]?.id);
+              }}
+            >
+              下一个
+            </Button>
+          </Space>
+        }
       />
     </div>
   );

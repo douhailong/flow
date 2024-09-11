@@ -39,6 +39,7 @@ import No from '@assets/no.png';
 import Yes from '@assets/yes.png';
 
 function App() {
+  const [offset, setOffset] = useState<number[]>([150, 100]);
   const [copyNode, setCopyNode] = useState<FlowViewNode[]>([]);
   const [edges, setEdges] = useState<FlowViewEdge[]>([]);
   const [nodes, setNodes] = useState<FlowViewNode[]>(RootNode(''));
@@ -88,27 +89,31 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    // setStores({
-    //   auditTime: '2024-08-18 16:30:57',
-    //   hasDraft: '3',
-    //   mode: 'mutable', //mutable
-    //   ruleId: '980ebac64ef84da9b2acaf4a2207f0ee',
-    //   ruleName: '配伍禁忌',
-    //   ruleType: '1',
-    //   version: 'V1.18',
-    //   nodeId: 'root&1&1&2'
-    // });
+    setStores({
+      auditTime: '2024-08-18 16:30:57',
+      hasDraft: '3',
+      mode: 'mutable', //mutable
+      ruleId: '5db35c94cf0041f1b2c2152cd4f183fe',
+      ruleName: '毒性药品',
+      ruleType: '1',
+      version: 'V1.11',
+      nodeId: 'root&1&1&1&1'
+    });
   }, []);
 
   useEffect(() => {
     setShow(false);
     setTimeout(() => setShow(true), 10);
-    if (stores.nodeId && stores.mode === 'check') onLookRunningRule(stores.nodeId);
+    if (stores.nodeId && stores.mode === 'check') {
+      setTimeout(() => {
+        onLookRunningRule(stores.nodeId);
+      }, 100);
+    }
   }, [edges]);
 
   useEffect(() => {
     const nds = nodes.map((node) =>
-      changedIds2.includes(node.id) ? { ...node, select: SelectType.SUB_DANGER } : node
+      changedIds2.includes(node.id) ? { ...node, select: SelectType.DANGER } : node
     );
     setNodes(nds);
   }, [changedIds2]);
@@ -122,7 +127,7 @@ function App() {
             select:
               node.select === SelectType.SELECT
                 ? changedIds2.includes(node.id)
-                  ? SelectType.SUB_DANGER
+                  ? SelectType.DANGER
                   : SelectType.DEFAULT
                 : node.id === selectedId
                   ? SelectType.SELECT
@@ -267,22 +272,36 @@ function App() {
     setEdges(edges.filter((edge) => !edge.id.startsWith(selectedId)));
   };
 
-  const onSearch = (value: string, clear?: boolean) => {
-    if (clear) {
+  const onSearch = (resultId: string, clear?: boolean) => {
+    if (clear || !resultId) {
+      setOffset([150, 100]);
+      setShow(false);
+      setTimeout(() => setShow(true), 10);
       return selectNodes(
         nodes.map((node) => node.id),
         SelectType.DEFAULT
       );
     }
 
-    selectNodes(
-      nodes.filter((node) => node.data.title.includes(value)).map((node) => node.id),
-      SelectType.DANGER
-    );
-    selectNodes(
-      nodes.filter((node) => !node.data.title.includes(value)).map((node) => node.id),
-      SelectType.DEFAULT
-    );
+    const transform = document.querySelector(`div[data-id="${resultId}"]`)?.style.transform;
+    const regex = /\d+(\.\d+)?px/g;
+    let match;
+    const pos = [];
+    while ((match = regex.exec(transform)) !== null) {
+      pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 600 : 200));
+    }
+
+    setOffset(pos);
+    setShow(false);
+    setTimeout(() => setShow(true), 10);
+
+    setTimeout(() => {
+      selectNode(nodes.find((node) => node.id === resultId)?.id || 'root', SelectType.DANGER);
+      selectNodes(
+        nodes.filter((node) => node.id !== resultId).map((node) => node.id),
+        SelectType.DEFAULT
+      );
+    }, 20);
   };
 
   const onCopy = () => {
@@ -330,27 +349,63 @@ function App() {
     if (!copyNode.length) return message.error('请先复制节点');
     const pasteType = copyNode[0]?.data.type;
     const selectedType = selectedNode?.data.type;
+    let curCopyNode = [...copyNode];
 
     if (selectedType === 'root') {
       if (pasteType !== 'branch') return message.error('根节点下只可以粘贴分支');
     }
 
     if (selectedType === 'branch') {
-      if (pasteType !== 'pureNode') return message.error('分支下只可以粘贴无判断节点');
+      if (pasteType !== 'pureNode' && pasteType !== 'node')
+        return message.error('分支下只可以粘贴判断节点');
+
+      if (pasteType === 'node') {
+        const [firstCpn, ...restCpns] = copyNode;
+        curCopyNode = [
+          {
+            ...firstCpn,
+            data: {
+              ...firstCpn.data,
+              type: 'pureNode',
+              logo: Yes,
+              jsonData: { ...firstCpn.data.jsonData, sourceResult: 'T' }
+            }
+          },
+          ...restCpns
+        ];
+      }
+    }
+
+    if (
+      (selectedType === 'node' && pasteType === 'pureNode') ||
+      (selectedType === 'pureNode' && pasteType === 'pureNode')
+    ) {
+      const [firstCpn, ...restCpns] = copyNode;
+      curCopyNode = [
+        {
+          ...firstCpn,
+          data: {
+            ...firstCpn.data,
+            type: 'node'
+          }
+        },
+        ...restCpns
+      ];
     }
 
     if (selectedType === 'pureNode' || selectedType === 'node') {
-      if (pasteType !== 'node' && pasteType !== 'tip')
+      if (pasteType !== 'node' && pasteType !== 'tip' && pasteType !== 'pureNode')
         return message.error('无判断节点只可以粘贴判断节点和警示');
     }
 
     const edgs = edges
       .filter((edge) => edge.source === selectedId)
       .map((edge) => Number(edge.id.replace(selectedId + '&', '')));
-    const lastNum = Math.max(...edgs);
-    const firstId = copyNode[0]?.id;
+
+    const lastNum = Math.max(...edgs) === -Infinity ? 0 : Math.max(...edgs);
+    const firstId = curCopyNode[0]?.id;
     const firstPasteId = `${selectedId}&${lastNum + 1}`;
-    const newNds = copyNode.map((node) => ({
+    const newNds = curCopyNode.map((node) => ({
       ...node,
       id: node.id.replace(firstId, firstPasteId)
     }));
@@ -359,6 +414,7 @@ function App() {
       target: node.id,
       id: node.id
     }));
+
     setNodes([...nodes, ...newNds]);
     setEdges([...edges, ...newEdgs]);
   };
@@ -385,6 +441,22 @@ function App() {
       }
     }
     setChangedIds(result);
+
+    if (warn) {
+      const transform = document.querySelector(`div[data-id="${warn}"]`)?.style.transform;
+      if (!transform) return;
+      const regex = /\d+(\.\d+)?px/g;
+      let match;
+      const pos = [];
+      while ((match = regex.exec(transform)) !== null) {
+        pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 600 : 200));
+      }
+      console.log(pos, 'warn warn warn');
+
+      setOffset(pos);
+      setShow(false);
+      setTimeout(() => setShow(true), 10);
+    }
   };
 
   const onSubmit = async (type: SubmitType) => {
@@ -619,12 +691,17 @@ function App() {
           onCopy={onCopy}
           onSubmit={onSubmit}
           mode={stores.mode}
+          nodes={nodes}
         />
         <div className='flex h-[calc(100vh-6rem)]'>
           <div className='flex-1'>
             {/* [React Flow]: Couldn't create edge for source handle id: "undefined", edge id: root&1. Help: https://reactflow.dev/error#008 setEdges 会出现这个问题 */}
             {show && (
               <FlowView
+                flowProps={{
+                  defaultViewport: { x: offset[0], y: offset[1], zoom: 0.5 },
+                  fitView: false
+                }}
                 nodes={nodes}
                 edges={edges}
                 onNodeClick={(e, node) => {

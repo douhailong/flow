@@ -51,7 +51,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
   const [categoryType, setCategoryType] = useState<CategoryType>('default');
   const [relationType, setRelationType] = useState<RelationType>('in');
   const [operationType, setOperationType] = useState<'dict' | 'word'>('dict');
-  const [operationTypes, setOperationTypes] = useState<('num' | 'dayCeil' | 'ceil')[]>(['num']);
+  const [operationTypes, setOperationTypes] = useState<
+    ('num' | 'dayCeil' | 'ceil' | 'minDoseCeil')[]
+  >(['num']);
   const [desc, setDesc] = useState('');
   const [isOpenTree, setIsOpenTree] = useState(false);
   const [isOpenTable, setIsOpenTable] = useState(false);
@@ -373,9 +375,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           }}
           onValuesChange={onValuesChange}
         >
-          <Colation show={selectedNode.data.type === 'node'}>
-            <ParentReslut title={parentNode?.data.title} />
-          </Colation>
+          {/* <Colation show={selectedNode.data.type === 'node'}> */}
+          <ParentReslut title={parentNode?.data.title} type={selectedNode?.data.type} />
+          {/* </Colation> */}
           <div className='text-sm mb-2'>节点设置</div>
           <Form.Item name='checkParam' initialValue='specialBoilType'>
             <Select options={categoryOpts} />
@@ -631,7 +633,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
   );
 };
 
-const ParentReslut = ({ title }: { title: string }) => (
+const ParentReslut = ({ title, type }: { title: string; type: 'node' | 'pureNode' }) => (
   <>
     <div className='text-sm mb-2'>节点判断</div>
     <div className='p-1.5 bg-blue-100 border ring-1 ring-blue-400 rounded mb-2 break-words'>
@@ -639,7 +641,7 @@ const ParentReslut = ({ title }: { title: string }) => (
     </div>
     <div className='text-sm text-gray-600 mb-2'>若上述逻辑条件</div>
     <Form.Item name='sourceResult' noStyle initialValue='T'>
-      <Radio.Group>
+      <Radio.Group disabled={type === 'pureNode'}>
         <Radio className='w-full mb-2' value='T'>
           是（即条件成立）
         </Radio>

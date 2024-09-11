@@ -39,6 +39,10 @@ export const ceilOpts2 = [
   {
     label: '常规剂量每天上限',
     value: 'dayCeil'
+  },
+  {
+    label: '常规剂量每天下限',
+    value: 'minDoseCeil'
   }
 ];
 

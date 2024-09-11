@@ -7,7 +7,11 @@ import { getCategorys, getInUseWarnLevels } from '@services/index';
 import { useQuery } from 'react-query';
 
 const options = [
-  { value: 'name', label: '药品·名称' }
+  { value: 'name', label: '药品·名称' },
+  {
+    value: 'weightEvery',
+    label: '单帖量'
+  }
   // { value: 'minDose', label: '最小可分剂量' }
 ];
 
@@ -100,7 +104,7 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                 onChange={(val) =>
                   form.setFieldValue(
                     'warnContent',
-                    val === 'name' ? '[药品·名称] ' : '[最小可分剂量] '
+                    val === 'name' ? '[药品·名称] ' : '[药品名称[单帖量]] '
                   )
                 }
               />
@@ -112,7 +116,7 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             autoSize={{ maxRows: 3, minRows: 3 }}
             onChange={(e) => {
               const variable =
-                form.getFieldValue('warnParam') === 'name' ? '[药品·名称] ' : '[最小可分剂量] ';
+                form.getFieldValue('warnParam') === 'name' ? '[药品·名称] ' : '[药品名称[单帖量]] ';
               !e.target.value.includes(variable) &&
                 form.setFieldsValue({
                   warnContent: variable
@@ -128,7 +132,10 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             placeholder='请选择'
             options={options}
             onChange={(val) =>
-              form.setFieldValue('suggestion', val === 'name' ? '[药品·名称] ' : '')
+              form.setFieldValue(
+                'suggestion',
+                val === 'name' ? '[药品·名称] ' : '[药品名称[单帖量]] '
+              )
             }
           />
         </Form.Item>
