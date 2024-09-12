@@ -35,8 +35,10 @@ import {
 } from '@services';
 import { useMutation, useQuery } from 'react-query';
 
-import No from '@assets/no.png';
-import Yes from '@assets/yes.png';
+// import No from '@assets/no.png';
+// import Yes from '@assets/yes.png';
+const Yes = '/public/dist/yes.png';
+const No = '/public/dist/no.png';
 
 function App() {
   const [offset, setOffset] = useState<number[]>([150, 100]);
@@ -93,10 +95,10 @@ function App() {
       auditTime: '2024-08-18 16:30:57',
       hasDraft: '3',
       mode: 'mutable', //mutable
-      ruleId: '5db35c94cf0041f1b2c2152cd4f183fe',
-      ruleName: '毒性药品',
+      ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
+      ruleName: '测试type',
       ruleType: '1',
-      version: 'V1.11',
+      version: 'V5.1',
       nodeId: 'root&1&1&1&1'
     });
   }, []);
@@ -288,7 +290,7 @@ function App() {
     let match;
     const pos = [];
     while ((match = regex.exec(transform)) !== null) {
-      pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 600 : 200));
+      pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 400 : 200));
     }
 
     setOffset(pos);
@@ -449,7 +451,7 @@ function App() {
       let match;
       const pos = [];
       while ((match = regex.exec(transform)) !== null) {
-        pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 600 : 200));
+        pos.push(-(Number(match[0].replace('px', '')) / 2) + (!pos.length ? 400 : 200));
       }
       console.log(pos, 'warn warn warn');
 
