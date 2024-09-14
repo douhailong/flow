@@ -37,8 +37,9 @@ import { useMutation, useQuery } from 'react-query';
 
 // import No from '@assets/no.png';
 // import Yes from '@assets/yes.png';
-const Yes = '/public/dist/yes.png';
-const No = '/public/dist/no.png';
+
+const No = 'no.png';
+const Yes = 'yes.png';
 
 function App() {
   const [offset, setOffset] = useState<number[]>([150, 100]);
@@ -91,16 +92,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    setStores({
-      auditTime: '2024-08-18 16:30:57',
-      hasDraft: '3',
-      mode: 'mutable', //mutable
-      ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
-      ruleName: '测试type',
-      ruleType: '1',
-      version: 'V5.1',
-      nodeId: 'root&1&1&1&1'
-    });
+    // setStores({
+    //   auditTime: '2024-08-18 16:30:57',
+    //   hasDraft: '3',
+    //   mode: 'mutable', //mutable
+    //   ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
+    //   ruleName: '测试type',
+    //   ruleType: '1',
+    //   version: 'V6.5',
+    //   nodeId: 'root&1&1&1&1'
+    // });
   }, []);
 
   useEffect(() => {
@@ -202,7 +203,7 @@ function App() {
       window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
-      message.error(data.errorMsg);
+      message.error(data.errorMsg || data.resultMsg);
     }
   });
 
@@ -220,7 +221,7 @@ function App() {
       window.parent.postMessage({ source: 'flow', data: { success: true } }, '*');
     },
     onError({ data }) {
-      message.error(data.errorMsg);
+      message.error(data.errorMsg || data.resultMsg);
     }
   });
 
@@ -349,6 +350,15 @@ function App() {
   // TODO
   const onPaste = () => {
     if (!copyNode.length) return message.error('请先复制节点');
+
+    if (
+      copyNode[0].data.sourceResult === 'F' &&
+      selectedNode?.data.title.includes('全部药品') &&
+      selectedNode?.data.checkParam === 'medicineName'
+    ) {
+      return message.error('全部药品的药品名称子节点判断条件不能为否');
+    }
+
     const pasteType = copyNode[0]?.data.type;
     const selectedType = selectedNode?.data.type;
     let curCopyNode = [...copyNode];

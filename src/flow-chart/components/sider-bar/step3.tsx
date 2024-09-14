@@ -60,6 +60,13 @@ const Step3: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
         clearOnDestroy
         form={form}
         onFinish={(values) => {
+          // if (
+          //   parentNode?.data.title.includes('全部药品') &&
+          //   values.sourceResult === 'F'
+          // ) {
+          //   return message.error('全部药品的子节点判断条件不能为否');
+          // }
+
           const title = `${values.warnTypeCodeVal} ${levelOpts.find((lev) => values.warnLevel === lev.value)?.label} ${values.warnContent}\n建议：${values.suggestion}`;
 
           const color = data?.data?.data.find(

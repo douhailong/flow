@@ -34,7 +34,9 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response: AxiosResponse<any, any>) => {
     return new Promise((resolve, reject) => {
-      !response?.data?.errorMsg ? resolve(response) : reject(response);
+      response?.data?.resultCode === '20000' || response?.data?.errorMsg
+        ? reject(response)
+        : resolve(response);
     });
   },
   (err) => {

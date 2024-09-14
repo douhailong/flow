@@ -280,9 +280,14 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
           clearOnDestroy
           form={form}
           onFinish={(values) => {
-            // const a = validAges(values.ages);
-            console.log(values, 'VVVVVVVVVVVVVVVVVVVVV');
-            // return;
+            if (
+              values.checkParam === 'medicineName' &&
+              parentNode?.data.title.includes('全部药品') &&
+              values.sourceResult === 'F'
+            ) {
+              return message.error('全部药品的药品名称子节点判断条件不能为否');
+            }
+
             if (values.nums) {
               if (
                 values?.nums?.filter(
@@ -542,7 +547,14 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                                   {
                                     label: 'kg',
                                     value: 'kg'
-                                  }
+                                  },
+                                  { label: '个', value: '个' },
+                                  { label: '包', value: '包' },
+                                  { label: '只', value: '只' },
+                                  { label: '对', value: '对' },
+                                  { label: '支', value: '支' },
+                                  { label: '条', value: '条' },
+                                  { label: '袋', value: '袋' }
                                 ]}
                               />
                             </Form.Item>
