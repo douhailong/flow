@@ -92,16 +92,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    setStores({
-      auditTime: '2024-08-18 16:30:57',
-      hasDraft: '3',
-      mode: 'mutable', //mutable
-      ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
-      ruleName: '测试type',
-      ruleType: '1',
-      version: 'V6.5',
-      nodeId: 'root&1&1&1&1'
-    });
+    // setStores({
+    //   auditTime: '2024-08-18 16:30:57',
+    //   hasDraft: '3',
+    //   mode: 'check', //mutable
+    //   ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
+    //   ruleName: '测试type',
+    //   ruleType: '1',
+    //   version: 'V6.5',
+    //   nodeId: 'root&1&1&1&1'
+    // });
   }, []);
 
   useEffect(() => {
@@ -693,7 +693,10 @@ function App() {
 
   return (
     <div className='h-full'>
-      <Spin tip='加载中...' spinning={getRuleDataMutation.isLoading}>
+      <Spin
+        tip='加载中...'
+        spinning={getRuleDataMutation.isLoading || judgeHasDraftMutation.isLoading}
+      >
         <HeaderBar
           selectedNode={selectedNode}
           onSwitchToMutable={onSwitchToMutable}

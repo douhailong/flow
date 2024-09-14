@@ -349,12 +349,7 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish, ne
               (next) => next.data.checkParam === 'medicineName' && next.data.sourceResult === 'F'
             );
 
-            if (
-              values.checkParam === 'medicineName' &&
-              describe.includes('全部药品') &&
-              values.sourceResult === 'T' &&
-              fined
-            ) {
+            if (values.checkParam === 'medicineName' && describe.includes('全部药品') && fined) {
               return message.error('全部药品的药品名称子节点判断条件不能为否');
             }
 
