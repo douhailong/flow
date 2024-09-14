@@ -10,7 +10,7 @@ const options = [
   { value: 'name', label: '药品·名称' },
   {
     value: 'weightEvery',
-    label: '单帖量'
+    label: '药品名称[单帖量]'
   }
   // { value: 'minDose', label: '最小可分剂量' }
 ];

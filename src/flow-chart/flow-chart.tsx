@@ -92,16 +92,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    // setStores({
-    //   auditTime: '2024-08-18 16:30:57',
-    //   hasDraft: '3',
-    //   mode: 'mutable', //mutable
-    //   ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
-    //   ruleName: '测试type',
-    //   ruleType: '1',
-    //   version: 'V6.5',
-    //   nodeId: 'root&1&1&1&1'
-    // });
+    setStores({
+      auditTime: '2024-08-18 16:30:57',
+      hasDraft: '3',
+      mode: 'mutable', //mutable
+      ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
+      ruleName: '测试type',
+      ruleType: '1',
+      version: 'V6.5',
+      nodeId: 'root&1&1&1&1'
+    });
   }, []);
 
   useEffect(() => {
@@ -233,6 +233,8 @@ function App() {
   const parentNode = nodes.find(
     (node) => node.id === edges.find((edge) => edge.target === selectedId)?.source
   );
+  const nextIds = edges.filter((edge) => edge.source === selectedId).map((ed) => ed.id);
+  const nextNodes = nodes.filter((node) => nextIds.includes(node.id));
 
   const onAddBranch = (type: NodeType) => {
     const reg = new RegExp(`^${selectedId}&`);
@@ -725,7 +727,12 @@ function App() {
           {stores.mode === 'mutable' && (
             <div className='w-72 p-2 overflow-y-auto relative'>
               {/* @ts-ignore */}
-              <SiderBar onFinish={onFinish} selectedNode={selectedNode} parentNode={parentNode} />
+              <SiderBar
+                onFinish={onFinish}
+                selectedNode={selectedNode!}
+                parentNode={parentNode}
+                nextNodes={nextNodes}
+              />
             </div>
           )}
         </div>

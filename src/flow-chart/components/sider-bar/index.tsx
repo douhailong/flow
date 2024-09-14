@@ -12,6 +12,7 @@ export type OnFinishProps = { step: 1 | 2 | 3; values?: any; title: string };
 export type SiderBarProps = {
   selectedNode: FlowViewNode;
   parentNode?: FlowViewNode;
+  nextNodes?: FlowViewNode[];
   onFinish: (props: OnFinishProps) => void;
 };
 

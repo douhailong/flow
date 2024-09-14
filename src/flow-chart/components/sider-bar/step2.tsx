@@ -42,7 +42,7 @@ const opts1: Option[] = [
   { label: '全部药品', value: '2' }
 ];
 
-const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) => {
+const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish, nextNodes }) => {
   const [categoryOpts, setCategoryOpts] = useState<Option[]>([]);
   const [flatDiseaseOpts, setFlatDiseaseOpts] = useState<Option[]>([]);
   const [resultOpts, serResultOpts] = useState<Option[]>([]);
@@ -345,6 +345,19 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
             const describe = `${desc1} ${desc2} ${desc3} ${desc4}`;
             setDesc(describe);
 
+            const fined = nextNodes?.find(
+              (next) => next.data.checkParam === 'medicineName' && next.data.sourceResult === 'F'
+            );
+
+            if (
+              values.checkParam === 'medicineName' &&
+              describe.includes('全部药品') &&
+              values.sourceResult === 'T' &&
+              fined
+            ) {
+              return message.error('全部药品的药品名称子节点判断条件不能为否');
+            }
+
             if (selectedCategory === 'pathogen') {
               const labels = flatDiseaseOpts
                 .filter(({ value }) => paramVal?.includes(value))
@@ -548,6 +561,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish }) 
                                     label: 'kg',
                                     value: 'kg'
                                   },
+                                  { label: '克', value: '克' },
+                                  { label: '千克', value: '千克' },
+                                  { label: '公斤', value: '公斤' },
                                   { label: '个', value: '个' },
                                   { label: '包', value: '包' },
                                   { label: '只', value: '只' },
