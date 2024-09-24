@@ -35,9 +35,6 @@ import {
 } from '@services';
 import { useMutation, useQuery } from 'react-query';
 
-// import No from '@assets/no.png';
-// import Yes from '@assets/yes.png';
-
 const No = 'no.png';
 const Yes = 'yes.png';
 
@@ -92,16 +89,16 @@ function App() {
       // () => this.window.removeEventListener('message', );
     });
 
-    // setStores({
-    //   auditTime: '2024-08-18 16:30:57',
-    //   hasDraft: '3',
-    //   mode: 'mutable', //mutable
-    //   ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
-    //   ruleName: '测试type',
-    //   ruleType: '1',
-    //   version: 'V6.5',
-    //   nodeId: 'root&1&1&1&1'
-    // });
+    setStores({
+      auditTime: '2024-08-18 16:30:57',
+      hasDraft: '3',
+      mode: 'mutable', //mutable
+      ruleId: '778b9820ab0f47c791f90f577c45f0ad',
+      ruleName: '有毒药品超剂量',
+      ruleType: '3',
+      version: 'V2.7',
+      nodeId: 'root&1&1&1&1'
+    });
   }, []);
 
   useEffect(() => {
@@ -557,6 +554,8 @@ function App() {
         });
     }
   };
+
+  console.log(nodes, '---', edges);
 
   const onFinish = ({ step, values, title }: OnFinishProps) => {
     let nds: FlowViewNode[] = [];

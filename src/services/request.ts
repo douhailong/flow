@@ -22,7 +22,7 @@ instance.interceptors.request.use(
         ...config.headers,
         Authorization:
           token ||
-          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzI3MjMzOTk4LCJpYXQiOjE3MjY2MjkxOTgsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.1_rvFl0OcW7vD6ibkyyyAruuu3GhbtIYTqPZVOaTvN3Hr8Bh686r_F4VeJSAZ4sLVNpOO6UDrlEH59CB7ewTkw'
+          'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1ZCI6IndlYiIsInJvbGUiOlt7ImF1dGhvcml0eSI6IlJPTEVfMSJ9XSwiZXhwIjoxNzI3Nzc2Mjg1LCJpYXQiOjE3MjcxNzE0ODUsInRlbmFudCI6ImNmc24yIiwianRpIjoiMjYifQ.lzVou0kiD9sD1UBHOYFv_kEHrmChPRRhx66599XeXnWSnADg9GNq0DH98uQo3FkdW_-bPkQpRAy5hHs2imG5QQ'
       }
     } as InternalAxiosRequestConfig<any>;
   },
