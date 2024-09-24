@@ -556,9 +556,9 @@ const Step2: React.FC<SiderBarProps> = ({ selectedNode, parentNode, onFinish, ne
                                     label: 'kg',
                                     value: 'kg'
                                   },
-                                  { label: '克', value: '克' },
-                                  { label: '千克', value: '千克' },
-                                  { label: '公斤', value: '公斤' },
+                                  // { label: '克', value: '克' },
+                                  // { label: '千克', value: '千克' },
+                                  // { label: '公斤', value: '公斤' },
                                   { label: '个', value: '个' },
                                   { label: '包', value: '包' },
                                   { label: '只', value: '只' },

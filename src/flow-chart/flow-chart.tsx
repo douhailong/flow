@@ -95,7 +95,7 @@ function App() {
     // setStores({
     //   auditTime: '2024-08-18 16:30:57',
     //   hasDraft: '3',
-    //   mode: 'check', //mutable
+    //   mode: 'mutable', //mutable
     //   ruleId: '4c58bc4cc1cb4f3a91617fadaa84ea08',
     //   ruleName: '测试type',
     //   ruleType: '1',
